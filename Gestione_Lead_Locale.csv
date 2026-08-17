@@ -1,0 +1,15 @@
+ID Lead,Ragione Sociale,Comune,Indirizzo,Fatturato,Telefono,Email,Sito Web,Referente,Canale Contatto,Note Audit Digitale,Commercial Fit,Digital Gap,Data Quality,Lead Opp Score,Priorita,Stato Workflow
+#L001,MDP Srl,Artegna,"Via Buja, 13",€ 3.507.000,0432-784549,info@mdpsrl.com,www.mdpsrl.com,,,No SEO,95,85,85,89,Alta,Importato
+#L002,Cime Srl,Buja,"Via vilsbiburg, 4",€ 2.484.000,0432-871253,info@cimeimpianti.it,www.cimeimpianti.it,,,Seo 0,95,85,85,89,Alta,Importato
+#L003,D E G Group Srl,Buja,"via Polvaries, 23",€ 3.427.000,0432- 975121,service@degautomazioni.it,www.degautomazioni.it,Gabriele Miani,Linkedin,Seo inesistente,95,85,100,91,Alta,Importato
+#L004,Maschio Srl,Buja,"via provinciale Osovana, 74",€ 3.750.000,,info@ceramichemaschio.com,www.ceramichemaschio.com,Alessia,,Da Verificare,95,70,85,83,Alta,Importato
+#L005,Pielle SRL,Buja,"Via Polvaries, 60",N/D,,info@impiantipielle.it,www.impiantipielle.it,,,No SEO,85,85,70,82,Alta,Importato
+#L006,Arti Grafiche Lizzi Srl,Fagagna,"Via G.A.M. Rollet, 15",€ 8.688.000,,arti@grafichelizzi.it,www.grafichelizzi.it,,,Seo pessima,95,85,70,88,Alta,Importato
+#L007,Piemme Srl,Fagagna,"Via Spilimbergo, 184/a",€ 7.090.000,0432-810782,commerciale@piemmesrl.com,www.piemme-srl.com,,,Non sicuro SEO pessima,95,90,85,91,Alta,Importato
+#L008,Advan Srl,Amaro,"Via Jacopo Linussio, 1",N/D,,info@advanimplantology.com,www.advanimplantology.com,,,Da Verificare,85,70,70,77,Alta,Importato
+#L009,CleveryNext Srl,Amaro,"Via Jacopo Linussio, 1",N/D,,administration@cleverynext.it,www.cleverynext.com,,,Da Verificare,85,70,70,77,Alta,Importato
+#L010,Marmax Srl,Amaro,"Via Jacopo Linussio, 1",N/D,,info@marmaxdesign.com,www.marmaxdesign.com,,,Da Verificare,85,70,70,77,Alta,Importato
+#L011,Novalegno Srl,Amaro,"Via Cooperativa Carnica, 6",N/D,,info@novalegno.it,www.novalegno.it,,,Da Verificare,85,70,70,77,Alta,Importato
+#L012,Plan 1 Health Srl,Amaro,"Via Fratelli Solari, 5",N/D,,info@p1h.it,www.p1h.it,,,Da Verificare,85,70,70,77,Alta,Importato
+#L013,Prodigy Technology Srl,Amaro,"Via Jacopo Linussio, 1",N/D,,info@prodigysgroup.it,www.prodigys.it,,,Da Verificare,85,70,70,77,Alta,Importato
+#L014,TDP Srl,Amaro,"Via Fratelli Solari, 1/B",N/D,,info@tdpsrl.it,www.tdpsrl.it,,,Da Verificare,85,70,70,77,Alta,Importato
