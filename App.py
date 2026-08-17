@@ -2,55 +2,6 @@ import streamlit as st
 import pandas as pd
 import os
 
-st.set_page_config(page_title="Lead Management CRM Local", layout="wide", page_icon="📊")
-
-CSV_FILE = "Gestione_Lead_Locale.csv"
-
-@st.cache_data
-def load_data():
-    if os.path.exists(CSV_FILE):
-        return pd.read_csv(CSV_FILE)
-    else:
-        st.error(f"File {CSV_FILE} non trovato!")
-        return pd.DataFrame()
-
-df = load_data()
-
-st.title("🍊 Lead Management & Opportunity Scoring (Locale)")
-st.caption("Piattaforma locale di qualificazione e diagnosi B2B")
-
-if not df.empty:
-    st.sidebar.header("🔍 Filtri")
-    priorita_filter = st.sidebar.multiselect("Priorità Lead", options=df["Priorita"].unique(), default=df["Priorita"].unique())
-    
-    df_filtered = df[df["Priorita"].isin(priorita_filter)]
-
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Totale Lead", len(df_filtered))
-    col2.metric("Priorità Alta (≥75)", len(df_filtered[df_filtered["Priorita"] == "Alta"]))
-    col3.metric("Priorità Media", len(df_filtered[df_filtered["Priorita"] == "Media"]))
-    col4.metric("Priorità Bassa", len(df_filtered[df_filtered["Priorita"] == "Bassa"]))
-
-    st.markdown("---")
-
-    tab1, tab2 = st.tabs(["📋 Tabella Dashboard", "🔍 Scheda Dettaglio Lead"])
-
-    with tab1:
-        st.subheader("Elenco Lead Processati")
-        st.dataframe(
-            df_filtered[["ID Lead", "Ragione Sociale", "Comune", "Fatturato", "Lead Opp Score", "Priorita", "Sito Web"]],
-            use_container_width=True,
-            hide_index=True
-        )
-
-    with tab2:
-        st.subheader("Scheda di Dettaglio & Audit V2")
-        selected_lead_id = st.selectbox("Seleziona Azienda:", df_filtered["ID Lead"] + " - " + df_filtered["Ragione Sociale"])
-        
-       import streamlit as st
-import pandas as pd
-import os
-
 st.set_page_config(page_title="Lead Management CRM B2B", layout="wide", page_icon="🍊")
 
 CSV_FILE = "Gestione_Lead_Locale.csv"
@@ -71,7 +22,6 @@ st.title("🍊 Lead Management & Opportunity Scoring B2B")
 st.caption("Piattaforma CRM di qualificazione, diagnosi SEO e outreach")
 
 if not df.empty:
-    # Sidebar Filters
     st.sidebar.header("🔍 Filtri Strategici")
     
     priorita_opts = list(df["Priorita"].dropna().unique())
@@ -83,14 +33,12 @@ if not df.empty:
     comune_opts = sorted(list(df["Comune"].dropna().unique()))
     comune_filter = st.sidebar.multiselect("Comune / Sede", options=comune_opts, default=comune_opts)
 
-    # Filtering dataframe
     df_filtered = df[
         df["Priorita"].isin(priorita_filter) & 
         df["Stato Workflow"].isin(stato_filter) &
         df["Comune"].isin(comune_filter)
     ]
 
-    # Top Metrics Bar
     col1, col2, col3, col4, col5 = st.columns(5)
     col1.metric("Totale Lead Filtrati", len(df_filtered))
     col2.metric("Priorità Alta (≥75)", len(df_filtered[df_filtered["Priorita"] == "Alta"]))
@@ -104,7 +52,6 @@ if not df.empty:
 
     with tab1:
         st.subheader("Elenco Lead Processati & Scoring LOS")
-        
         st.dataframe(
             df_filtered[["ID Lead", "Ragione Sociale", "Comune", "Fatturato", "Lead Opp Score", "Priorita", "Stato Workflow", "Referente", "Sito Web"]],
             use_container_width=True,
@@ -172,18 +119,5 @@ if not df.empty:
                 referente_saluto = f"Gentile {row['Referente']}" if pd.notna(row['Referente']) and str(row['Referente']).strip() != "" else "Gentile Direzione"
                 critica_str = new_audit if new_audit else "alcune ottimizzazioni sulla visibilità SEO"
                 
-                pitch_text = f"""{referente_saluto},
-
-Analizzando la presenza digitale di {row['Ragione Sociale']} ({row['Sito Web']}), abbiamo rilevato che {critica_str}. Questo sta limitando le Vostre opportunità commerciali sui motori di ricerca.
-
-Abbiamo elaborato un'analisi preliminare di posizionamento SEO e visibilità B2B specifica per il Vostro settore.
-
-Siete disponibili per un breve confronto telefonico di 10 minuti la prossima settimana per condividerne i dettagli?
-
-Cordiali saluti,
-Gilberto Del Pizzo
-Consulente Digital Strategy & SEO
-"""
+                pitch_text = f"{referente_saluto},\n\nAnalizzando la presenza digitale di {row['Ragione Sociale']} ({row['Sito Web']}), abbiamo rilevato che {critica_str}. Questo sta limitando le Vostre opportunità commerciali sui motori di ricerca.\n\nAbbiamo elaborato un'analisi preliminare di posizionamento SEO e visibilità B2B specifica per il Vostro settore.\n\nSiete disponibili per un breve confronto telefonico di 10 minuti la prossima settimana per condividerne i dettagli?\n\nCordiali saluti,\nGilberto Del Pizzo\nConsulente Digital Strategy & SEO"
                 st.text_area("Copia il Testo della Mail/Pitch:", pitch_text, height=220)
-
-st.success("App online ed operativa!")
