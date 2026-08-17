@@ -1,15 +1,160 @@
-ID Lead,Ragione Sociale,Comune,Indirizzo,Fatturato,Telefono,Email,Sito Web,Referente,Canale Contatto,Note Audit Digitale,Commercial Fit,Digital Gap,Data Quality,Lead Opp Score,Priorita,Stato Workflow
-#L001,MDP Srl,Artegna,"Via Buja, 13",€ 3.507.000,0432-784549,info@mdpsrl.com,www.mdpsrl.com,,,No SEO,95,85,85,89,Alta,Importato
-#L002,Cime Srl,Buja,"Via vilsbiburg, 4",€ 2.484.000,0432-871253,info@cimeimpianti.it,www.cimeimpianti.it,,,Seo 0,95,85,85,89,Alta,Importato
-#L003,D E G Group Srl,Buja,"via Polvaries, 23",€ 3.427.000,0432- 975121,service@degautomazioni.it,www.degautomazioni.it,Gabriele Miani,Linkedin,Seo inesistente,95,85,100,91,Alta,Importato
-#L004,Maschio Srl,Buja,"via provinciale Osovana, 74",€ 3.750.000,,info@ceramichemaschio.com,www.ceramichemaschio.com,Alessia,,Da Verificare,95,70,85,83,Alta,Importato
-#L005,Pielle SRL,Buja,"Via Polvaries, 60",N/D,,info@impiantipielle.it,www.impiantipielle.it,,,No SEO,85,85,70,82,Alta,Importato
-#L006,Arti Grafiche Lizzi Srl,Fagagna,"Via G.A.M. Rollet, 15",€ 8.688.000,,arti@grafichelizzi.it,www.grafichelizzi.it,,,Seo pessima,95,85,70,88,Alta,Importato
-#L007,Piemme Srl,Fagagna,"Via Spilimbergo, 184/a",€ 7.090.000,0432-810782,commerciale@piemmesrl.com,www.piemme-srl.com,,,Non sicuro SEO pessima,95,90,85,91,Alta,Importato
-#L008,Advan Srl,Amaro,"Via Jacopo Linussio, 1",N/D,,info@advanimplantology.com,www.advanimplantology.com,,,Da Verificare,85,70,70,77,Alta,Importato
-#L009,CleveryNext Srl,Amaro,"Via Jacopo Linussio, 1",N/D,,administration@cleverynext.it,www.cleverynext.com,,,Da Verificare,85,70,70,77,Alta,Importato
-#L010,Marmax Srl,Amaro,"Via Jacopo Linussio, 1",N/D,,info@marmaxdesign.com,www.marmaxdesign.com,,,Da Verificare,85,70,70,77,Alta,Importato
-#L011,Novalegno Srl,Amaro,"Via Cooperativa Carnica, 6",N/D,,info@novalegno.it,www.novalegno.it,,,Da Verificare,85,70,70,77,Alta,Importato
-#L012,Plan 1 Health Srl,Amaro,"Via Fratelli Solari, 5",N/D,,info@p1h.it,www.p1h.it,,,Da Verificare,85,70,70,77,Alta,Importato
-#L013,Prodigy Technology Srl,Amaro,"Via Jacopo Linussio, 1",N/D,,info@prodigysgroup.it,www.prodigys.it,,,Da Verificare,85,70,70,77,Alta,Importato
-#L014,TDP Srl,Amaro,"Via Fratelli Solari, 1/B",N/D,,info@tdpsrl.it,www.tdpsrl.it,,,Da Verificare,85,70,70,77,Alta,Importato
+﻿AZIENDA;SEDE;INDIRIZZO;WEB;MAIL;Fatturato 
+Advan Srl;Amaro;Via Jacopo Linussio, 1;www.advanimplantology.com ;info@advanimplantology.com ;
+CleveryNext Srl;Amaro;Via Jacopo Linussio, 1;www.cleverynext.com;administration@cleverlynext.it;
+Marmax Srl;Amaro;Via Jacopo Linussio, 1;www.marmaxdesign.com;info@marmaxdesign.com;
+Novalegno Srl;Amaro;Via Cooperativa Carnica, 6;www.novalegno.it;info@novalegno.it;
+Plan 1 Health Srl;Amaro;Via Fratelli Solari, 5;www.p1h.it;info@p1h.it;
+Prodigy Technology Srl;Amaro;Via Jacopo Linussio, 1;www.prodigys.it;info@prodigysgroup.it;
+TDP Srl;Amaro;Via Fratelli Solari, 1/B;www.tdpsrl.it;info@tdpsrl.it;
+Valle Costruzioni Srl;Amaro;via Valli di Carnia, 7D;www.vallecostruzioni.it;info@vallecostruzioni.it;
+MDP Srl;Artegna;Via Buja, 13;www.mdpsrl.com;info@mdpsrl.com;3.507.000 €
+Technocare Electronic System Srl;Attimis;Via Ortolani, 27;www.technocare-tes.eu;;
+Falk Srl;Azzano X;via Peperate, 21;www.falksrl.it;info@falksrl.it;
+TG Srl;Azzano X;Via Villata, 19;www.tgsrl.com;info@tgsrl.com;
+Foody Srl;Basiliano;Via Gian Giacomo Marinoni, 37;www.foody-srl.com/;info@foody-srl.com;
+Dall'Agnese Srl;Brugnera;Via Giuseppe Mazzini, 3;www.dallagnese.it;info@dall'agnese.it;
+Emanuele Mariotto Srl;Brugnera;Via Calderano, 9/b;www.emanuelemariotto.it;info@emanuelemariotto.it;
+Erreci Srl;Brugnera;Viale Europa, 13;www.errecisrl.it;info@errecisrl.it;
+Etra Srl;Brugnera;Via Antonio Carpene, 25;www.etrametal.it;info@etrmetal.it;
+Gammaplast Srl;Brugnera;Viale Europa, 12;www.gammaplast-italia.com;info@gammaplast-italia.com;
+Giuntati Srl;Brugnera;Via G. Mazzini, 22d;www.giuntati2000.it;segreteria@giuntati2000.it;
+Group Legno srl;Brugnera;Viale Europa, 24/b;www.grouplegno.it;info@grouplegno.it;
+Ideal Bagni Srl;Brugnera;Via Antonio Carpene, 10;www.idealbagni.com;info@idealbagni.com;
+Innolac Srl;Brugnera;Via Lino Zanussi, 18;www.innolac.it;;
+Kios Arredamenti Srl;Brugnera;Viale L. Zanussi, 30;www.kios.com;info@kios.it;
+Krea Srl;Brugnera;Viale L. Zanussi, 11;www.kreasrl.com;kreasantarossa@alice.it;
+Loetrà Srl;Brugnera;Viale Europa, 13;www.loetra.com;info@loetra.com;
+Modul-Pan Srl;Brugnera;Via Taglio, 9;www.modul-pan.it;info@modul-pan.it;
+P.R.E.M. Line Srl;Brugnera;Via Pordenone, 47;www.premline.it;info@premline.it;
+Pivetta Plast Srl;Brugnera;Viale Europa, 24/a;www.pivettaplast.com;info@pivettaplast.com;
+Rigosalotti Srl;Brugnera;Via Ponte di Sotto, 31/a;www.rigosalotti.it;info@rigosalotti.it;
+Sittex Srl;Brugnera;Viale Europa, 26;www.sittex.it;sales@sittex.it;
+Union Srl;Brugnera;Viale Europa, 12/a;www.union-srl.com;info@union-srl.com;
+Valenext Srl;Brugnera;Via Carpenè, 23 fraz. Maron;www.valenitalia.it;export@valenitalia.it;
+Valenitalia Srl;Brugnera;Via Antonio Carpene, 23;www.valenitalia.it;amministrazione@valenitalia.it;
+Verbo Srl;Brugnera;Via Taglio, 87;www.verbosrl.com;info@verbosrl.com;
+Vetreria Giacon Luigi Srl;Brugnera;Via Antonio Carpene, 19;www.vetreriagiacon.it;info@vetreriagiacon.it;
+Cime Srl;Buja;Via vilsbiburg, 4;www.cimeimpianti.it;info@cimeimpianti.it;2.484.000 €
+D E G Group Srl;Buja;via Polvaries, 23;www.degautomazioni.it;service@degautomazioni.it;3.427.000 €
+Maschio Srl;Buja;via provinciale Osovana, 74;www.ceramichemaschio.com;info@ceramichemaschio.com;3.750.000 €
+Pielle SRL;Buja;Via Polvaries, 60;www.impiantipielle.it;info@impiantipielle.it;
+Tonello Spa;Buttrio;Via D'Orment. 6;https://www.tonellospa.it/;info@tonellospa.it;
+Lestro Sl;Caneva;Via San Pietro, 56;www.lestro.it;;
+Sitalia Snc;Castelnuovo del Friuli;Via Celante, 38;www.sitalia.it;sitalia@sitalia.it;
+Maral Srl;Castions di Strada;Via A. Malignani, 1;www-maralgroup.it;info@maralgroup.eu;
+Officine Forgiarini Srl;Castions di Strada;Via Aquileia, 8;www.officine-forgiarini.it;info@forgiarini.it;
+SAIV Srl;Chiopris Viscone;Via Faidutti, 6;www.segheriasaiv.it;info@segheriasaiv.it;
+Livoni Edoardo & Figlio Srl;Corno di Rosazzo;via Papa Giovanni, 8;www.livoni.it;info@livoni.it;
+Turello Srl;Coseano;Via dell'Industria, 7;www.turello.net;turello@turello.net;
+Friul Pallet Srl;Faedis;;www.friulpallet.com;;
+Arti Grafiche Lizzi Srl;Fagagna;Via G.A.M. Rollet, 15;www.grafichelizzi.it;arti@grafichelizzi.it;8.688.000 €
+Piemme Srl;Fagagna;Via Spilimbergo, 184/a;www.piemme-srl.com;commerciale@piemmesrl.com;7.090.000 €
+Metal Srl;Fiume Veneto;Via Fratelli Zambon, 7/9;www.metalsrl.com;;
+Muzzin Marco Srl;Fiume Veneto;Via Piave, 86 fraz. Bannia;www.muzzin.it;;
+Fratelli Picco Srl;Flaibano;Via S. odorico, 5;www.fratellipicco.it;info@fratellipicco.it;
+B.G.B. Group Srl;Fontanafredda;Viale Venezia, 79/d;www.bgbgroup.it;info@bgbgroup.it;
+Bimea Steel Srl;Fontanafredda;Via Fossaluzza, 2;www.bimeasteel.com;info@bimeasteel.com;
+CarliEuklima srl;Fontanafredda;Via Fossaluzza, 12;www.carlieuklima.it;commerciale@carlieuklima.it;
+Copat Life Srl;Fontanafredda;Via E. Chiaradia, 11/A;www.copatlife.it;info@copatlife.it;
+Felis Srl;Fontanafredda;Via Pietro Zorutti, 22;www.felis.it;info@felis.it;
+Modulart Srl;Fontanafredda;via Domenico Guerrazzi, 1/B;www.modulartsrl.com;;
+Normann Srl;Fontanafredda;via Guglielmo Oberdan, 69;www.normann.it;info@normann.it;
+U.G.S. Spa;Fontanafredda;via Pietro Zorutti, 11;www.ugs-stampaggi.it;info@ugs-stampaggi.it;
+Complast Srl;Forni di Sotto;Zona Artigianale Industriale, 20;www.complastsrl.com;info@complastsrl.com;
+Farbe Srl;Majano;Via degli Alpini;www.farbe.it;info@farbe.it;16.403.000 €
+Meccaniche Del Mistro Srl;Maniago;via Monfalcone, 10;www.meccanichedelmistro.it;info@delmistro.it;
+Montbel;Manzano;Via delle Scuole 30;www.montbel.it;montbel@montbel.it;
+Luvisoni Legnami Srl;Martignacco;Via Spilimbergo, 168;www.luvisoni.it;info@luvisoni.it;9.434.000 €
+Zanini Antonio;Martignacco;Via Spilimbergo, 164;www.zaniniantonio.it;info@zaniniantonio.it;5.741.000 €
+ArtCart Srl;Moggio Udinese;Via degli Alpini, 6;www.artcart.it;info@artcart.it;
+PPM Srl;Pagnacco;Via Colloredo, 80;www.ppmsrl.it;info@ppmsrl.it;
+Battellino Srl;Paluzza;Località PIP Rivo;www.battellino.com;info@battellino.it;
+Omniadoc Spa;Pasian di Prato;Via Moretti, 10;https://www.omniadoc.it;info@omniadoc.it;
+Cubik Service Srl;Pasiano di Pordenone;via Maestri del Lavoro, 2;www.cubikservice.com;info@cubikservice.com;
+Fiard Due Srl;Pasiano di Pordenone;via Margherita Hack, 4;www.fiardue.com;;
+Meson's Cucine Srl;Pasiano di Pordenone;via Gradisca, 1;www.mesons.it;mesons@mesons.it;
+Area 98 srl;Pavia di Udine;Via della Ferrovia, 3;www.area98.it;info@area98.it;
+Diemme Legno;Pontebba;;;;
+Archeda Srl;Porcia;Via A. malignani, 7;www.archeda.eu;info@archeda.eu;
+Clever Chem Srl;Porcia;Via del Laghetto, 40;www.cleverchem.it;info@cleverchem.it;
+Cosma Group Srl;Porcia;Via Luigi Galvani, 15;www.cosmagroup.com;infocom@cosmagroup.com;
+Elleci Spa;Porcia;Via Pieve, 25;www.ellecispa.net;info@ellecispa.net;
+Ge.Da. Srl;Porcia;Via Maestri del Lavoro, 16/18;www.gedanextage.com;info@gedanextage.com;
+Gruppo Prisma Srl;Porcia;Via Pieve, 14/A;www.gruppoprisma.com;info@gruppoprisma.com;
+Oesse Srl;Porcia;Via Maestri del Lavoro, 81/83;www.oesse.com;;
+Rosa Spa;Porcia;Corso Italia, 52;www.rosagroup.com;;
+San Simone di Brisotto Srl;Porcia;Via Prata, 30;www.sansimone.it;info@sansimone.it;
+Daco Wood Srl;Pordenone;Piazzetta Cardinale Celso Costantini, 24;www.dacowood.it;info@dacowood.it;
+Europavimenti Srl;Pordenone;Via T. Donadon, 4;www.europavimenti.it;info@europavimenti.it;
+IMS Group;Pozzuolo del Friuli;Via Madonna della Salute, 23;https://www.iess.dental;info@iess.dental;
+Ergoplast Srl;Pradamano;Via Cussignacco, 78/1;www.ergoplast.it;;
+Esterna Servizi Srl;Pradamano;Via Cussignacco, 78;www.esternaservizi.it;info@esternaservizi.it;9.269.000 €
+Arcadia Società Agricola SRL;Prata di Pordenone;Via Garibaldi, 2;www.lemondewine.com;info@lemondewine.com;
+Bensen Srl;Prata di Pordenone;Via Enrico Mattei, 32;www.bensen.com;bensen@bensen.com;
+Friul Import Srl;Prata di Pordenone;via Friuli, 132;https://www.factoryprogettounico.com;info@factoryprogettounico.com;
+Kristalia Srl;Prata di Pordenone;via Antonio Durante, 27;www.kristalia.it;info@kristalia.it;
+Maccan Industria Componenti per Mobili Srl;Prata di Pordenone;via Eugenio Rigo, 10;www.maccan.it;commerciale@maccan.it;
+Martex Spa;Prata di Pordenone;Via Sagree, 23;www.martex.it;info@martex.it;
+MD House Srl;Prata di Pordenone;Via Antonio Durante, 28;www.mdhouse.it;info@mdhouse.it;
+Fg Automazioni Srl;Pravisdomini;Via Europa Unita, 22/24;www.fgautomazioni.it;giancarlo.f@fgautomazioni.it;
+PSM Srl;Premariacco;Via Bombelli, 12;https://psmitaly.com;info@psmsedie.com;
+Baldassi Srl;Ragogna;Via A. Manzoni, 6;www.baldassisrl.it;assistenza@baldassisrl.it;3.154.000 €
+Zanier Serramenti di Zanier G.&B.;Raveo;via Roma, Z.A.;www.zanieronline.it;info@zanieronline.it;
+Alpe Adria Textil Srl;Remanzacco;Strada di Salt, 50;https://www.alpeadriatextil.it/;info@alpeadriatextil.it;
+Diamir Srl;Resia;Via Prato, 28/c;www.diamir.it;info@diamir.it;
+La Blueclima Srl;Rive d'Arcano;Via Maseris, 3;www.blueclima.com;info@blueclima.com;1.676.000 €
+MTE Elettronica Srl;Rive d'Arcano;Via Maseris, 3;www.mte-elettronica.it;tecnico@mte-elettronica.it;2.341.000 €
+Eltec Lift Srl;Ronchi dei Legionari;Via Antonio Tambarin, 36/38;www.elteclift.com;info@elteclift.com;
+Agorà Spa;Sacile;Zona Artigianale Geromina, 19;www.edonedesign.it;info@agoragroup.it;
+Camelgroup Srl;Sacile;Via Mercato, 2;www.camelgroup.it;info@camelgroup.it;
+Dealplast Srl;Sacile;via Alberto Amman, 6;www.dealplast.com;info@dealplast.com;
+Doorarreda Srl;Sacile;Via Francenigo, 27;www.doorarreda.it;doorarreda@doorarreda.it;
+ICAM Pannelli Srl;Sacile;Zona Artigianale Geromina, 6;www.icampannelli.com;daniela, carlo, roberto, info;
+Ices EBM Srl;Sacile;Via A. Malignani, 8;www.icesebm.com;;
+Punto Tre Srl;Sacile;Strada San Giovanni Di Livenza, 19/G;www.arredobagnopuntotre.com;info@puntotre.com;
+VI. MA. Srl;Sacile;Strada Interna San Giovanni Di Livenza, 20/A;www.vimasrl.com;amministrazione@vimasrl.com;
+Toppazzini Spa;San Daniele del Friuli;Via Nazionale, 26;www.toppazzini.it;info@toppazzini.it;102.729.000 €
+ElecrtoZeta Srl;San Giorgio della Richinvelda;Via C. Kechler, 12;www.electrozeta.it;commerciale@electrozeta.it;
+Buiani Srl;San Giovanni al Natisone;Via Comunale del Rovere, 2;www.buiani.com;info@buiani.com;
+Forti Giorgio Srl;San Giovanni al Natisone;Via dell'Artigianato, 16;www.fortigiorgio.com;info@fortigiorgio.com;
+Grattoni Srl;San Giovanni al Natisone;Via Braide Matte, 7;www.grattonisedie.it;grattonisedie@gmail.com;
+Klarco Srl;San Quirino;Via Masieres, 7;www.klarco.com;amministrazione@klarco.com;
+TPS Srl;San Vito al Tagliamento;Via Carnia, 8;www.tpssrl.net;info@tpssrl.net;
+Costantini Pietro Srl;San Vito al Torre;Via Remis, 64;https://costantinipietro.com;info@costantinipietro.com;
+Yes Spices Srl;Santa Maria la Longa;Via Clauiano, 19;www.yesspices.it;info@yesspices.it;
+Friulana Rubinetterie Srl;Spilimbergo;Zona Industriale Cosa, 15A;www.friulanarubinetterie.it;info@friulanarubinetterie.it;
+Dierre Srl;Tarcento;Strada Statale 13, km 146;www.dierre-srl.com;info@dierre-srl.com;
+Doxe Srl;Tavagnacco;Via Galileo Galilei, 16;www.doxe.it;info@doxeimpianti.it;8.002.000 €
+DTI Srl;Tavagnacco;Via Palladio, 11;www.dtindustry.com;project@dtindustry.com;
+Tecnomedia Srl;Tavagnacco;Via Galileo Galilei, 42;www.tecnomediasrl.it;info@tecnomediasrl.t;5.926.000 €
+Union Energy Scrl;Tavagnacco;Via Udine 115;www.unionenergy.it;info@unionenergy.it;
+Comilegno Srl;Teor;Via Belvedere, 30;www.comilegno.com;info@comilegno.com;7.643.000 €
+High Tech Exchangers Srl;Teor;Via Max Piccini, 12;www.hteworld.it;info@hteworld.it;8.350.000 €
+Akuis Srl;Tolmezzo;Via Menotti Aita, 2-2E;www.akuis.tech;info@akuis.tech;
+Cristal Color Srl;Tolmezzo;Via A.P. Candoni, 60;www.cristalcolor.it;;
+Fly Solartech Solutions Srl;Tolmezzo;Via dell'Industria, 41/C;www.flysolartechsolutions.com;info@flysolartechsolutions.com ;
+Full Metal Snc di Ortis Mirco e Verner;Tolmezzo;Via dell'Industria, 41/H;www.full-metal.it;full-metal@full-metal.it;
+Lavorazione Legnami Srl;Tolmezzo;Via dell'Industria, 34;www.lavorazionelegnami.com;info@lavorazionelegnami.com ;
+LP Lattonerie Srl;Tolmezzo;Via Brasil, 27;www.lplattonerie.it;info@lplattonerie.it;
+Saim Srl Industria Marmi;Tolmezzo;Via dell'Industria, 30;www.saimarmi.it;info@saimarmi.it;
+Termonova Spa;Tolmezzo;Via Brasil, 5;www.termonova.net;?;
+ATS Mechatronics Srl;Trasaghis;via Chiavola, 10;www.ats.ud.it;ats@ats.ud.it;2.714.000 €
+Filmecc Srl;Trasaghis;via delle Roste Nuove, 18;www.filmecc.it;info@filmecc.it;1.339.000 €
+Atel Srl;Udine;Via Selvuzzis, 51/2;www.atelitalia.com;info@atelitalia.com;
+Dada Srl;Udine;Viale Europa Unita, 171;www.dada.info;treppo@dada.info;5.452.000 €
+Kronotech Srl;Udine;Via Adriatica, 284;www.kronotech.it;info@kronotech.it;7.244.000 €
+Plaxtech Srl;Udine;Via Sant'Osvaldo, 29;www.plaxtech.eu;staff@plaxtech.eu;
+Seltek Srl;Udine;Via Mantica, 7;www.seltekitalia.it;seltekitalia@pec.it;5.195.000 €
+FCF Srl;Varmo;via dell'Olmo, 5;www.fcfsrl.eu;info@fcfsrl.eu;
+Eurometal Srl;Villa Santina;Via Divisione Julia, 18;www.eurometalsrl-ud.it;eurometal2007@eurometalsrl-ud.191.it;
+Sapori Antichi Srl;Villa Santina;Via Comunità Carnica, 19;www.saporiantichisrl.com ;info@saporiantichisrl.com ;
+Latteria Montanari Srl;Villesse;Via Aquileia, 2;www.latteriamontanari.it;info@latteriamontanari.it;
+Ansagomma Srl;Zoppola;Via Paludo, 8 Poincicco;www.amsagomma.it;info@ansagomma.it;
+Derve Srl;Zoppola;Via Fontana, 37;www.derve.it;info@derve.it;
+Fama Srl;Zoppola;Via della Fossa, 6;www.famaspa.it;info@famaspa.it;
+FGF Mobili Srl;Zoppola;via della Fossa, 2;www.fgfmobili.com;info@fgfmobili.it;
+ICOS Professional Srl;Zoppola;via della Lonca, 4;www.icosprofessional.it;info@icosprofessional.it;
+Ingross Plast Srl;Zoppola;via Pra' di Risi, 12;www.ingrossplast.com;info@ingrossplast.com;
+Noxorsokemgroup Srl;Zoppola;Via Udine, 46;www.noxor.it;info@noxorsokem.it;
+Saldoplast Srl;Zoppola;Via Codis, 10;www.saldoplast.net;info@saldoplast.net;
+TecnoMark Srl;Zoppola;via Cusano, 18;www.tecnomark.it;info@tecnomark.it;
