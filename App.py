@@ -1,6 +1,7 @@
 import streamlit as st
 import pandas as pd
 import urllib.request
+import urllib.error
 import ssl
 import time
 import re
@@ -10,7 +11,7 @@ st.set_page_config(page_title="Gestionale Lead & Web Audit V2", layout="wide", p
 
 st.title("💼 Dashboard Gestionale Lead & Audit V2")
 
-# --- FUNZIONE SCANSIONE SEO REALE CON ESTRAZIONE CRITICITÀ ---
+# --- FUNZIONE SCANSIONE SEO REALE CON USER-AGENT COMPLETO ---
 def scansione_seo_reale(url):
     if not url or pd.isna(url) or str(url).strip() in ['', 'nan', 'N/D']:
         return "❌ Nessun URL valido specificato per questa azienda.", []
@@ -23,17 +24,23 @@ def scansione_seo_reale(url):
     criticita = []
     start_time = time.time()
     
+    # Header estesi per simulare un browser reale ed evitare blocchi 403
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+    }
+    
     try:
         ctx = ssl.create_default_context()
         ctx.check_hostname = False
         ctx.verify_mode = ssl.CERT_NONE
         
-        req = urllib.request.Request(
-            url_pulito, 
-            headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'}
-        )
+        req = urllib.request.Request(url_pulito, headers=headers)
         
-        with urllib.request.urlopen(req, timeout=7, context=ctx) as response:
+        with urllib.request.urlopen(req, timeout=8, context=ctx) as response:
             load_time = round(time.time() - start_time, 2)
             status_code = response.getcode()
             html = response.read().decode('utf-8', errors='ignore')
@@ -70,6 +77,13 @@ def scansione_seo_reale(url):
                 risultati.append("⚠️ **Tag H1 Principale:** MANCANTE")
                 criticita.append("- Tag H1 principale mancante nella homepage.")
                 
+    except urllib.error.HTTPError as e:
+        if e.code == 403:
+            risultati.append(f"⚠️ **Sito Attivo ma Protezione Firewall Rilevata (HTTP 403)**: Il server blocca le richieste automatizzate diretta da IP cloud. Il sito è raggiungibile da browser.")
+            criticita.append("- Presenza di protezione/firewall che blocca gli scansionatori automatici.")
+        else:
+            risultati.append(f"❌ **Errore HTTP {e.code}** raggiungendo {url_pulito}.")
+            criticita.append(f"- Il server restituisce errore HTTP {e.code}.")
     except Exception as e:
         risultati.append(f"❌ **Impossibile raggiungere il sito web** ({url_pulito}). Errore: {e}")
         criticita.append("- Sito web temporaneamente o permanentemente irraggiungibile.")
@@ -187,11 +201,10 @@ with tab_scheda:
                 report_scansione, lista_crit = scansione_seo_reale(sito_url)
                 st.session_state['ultimo_report_scansione'] = report_scansione
                 
-                # Popola automaticamente le note se sono state trovate criticità
                 if lista_crit:
                     st.session_state[f'note_{azienda_selezionata}'] = "\n".join(lista_crit)
                 else:
-                    st.session_state[f'note_{azienda_selezionata}'] = "Nessuna criticità critica di base rilevata."
+                    st.session_state[f'note_{azienda_selezionata}'] = "Nessuna criticità di base rilevata."
         
         if 'ultimo_report_scansione' in st.session_state:
             st.info(st.session_state['ultimo_report_scansione'])
@@ -215,7 +228,6 @@ with tab_scheda:
             idx = stati_possibili.index(stato_attuale) if stato_attuale in stati_possibili else 0
             stato_wf = st.selectbox("Stato Avanzamento Workflow:", stati_possibili, index=idx)
         
-        # Recupera valore salvato o di sessione
         valore_default_note = st.session_state.get(
             f'note_{azienda_selezionata}', 
             str(lead_info.get('Note Audit Digitale', 'Nessuna criticità di base rilevata.'))
