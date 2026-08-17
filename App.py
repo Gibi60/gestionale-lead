@@ -68,7 +68,7 @@ def scansione_seo_reale(url):
         
     return "\n\n".join(risultati)
 
-# --- CARICAMENTO DATI ---
+# --- CARICAMENTO DATI ROBUSTO ---
 @st.cache_data
 def load_data():
     file_path = "Gestione_Lead_Locale.csv" 
@@ -87,27 +87,22 @@ def load_data():
                 'Note Audit Digitale': ['Nessuna criticità di base rilevata.']
             })
 
-    df.columns = [str(col).strip() for col in df.columns]
+    # Mappatura automatica e flessibile delle colonne (Case-Insensitive)
+    col_map = {}
+    for col in df.columns:
+        c_clean = str(col).strip()
+        c_lower = c_clean.lower()
+        
+        if c_lower in ['azienda', 'ragione sociale', 'ragionesociale', 'nome', 'company']:
+            col_map[col] = 'Ragione Sociale'
+        elif c_lower in ['web', 'sito', 'sito web', 'sitoweb', 'url', 'website', 'link', 'dominio']:
+            col_map[col] = 'Sito Web'
+        elif c_lower in ['sede', 'città', 'citta', 'location']:
+            col_map[col] = 'Sede'
+            
+    df = df.rename(columns=col_map)
 
-    # Riconoscimento colonna Azienda
-    if 'Ragione Sociale' not in df.columns:
-        for candidate in ['Azienda', 'Nome', 'RagioneSociale', 'Company']:
-            if candidate in df.columns:
-                df['Ragione Sociale'] = df[candidate]
-                break
-        if 'Ragione Sociale' not in df.columns and len(df.columns) > 0:
-            df['Ragione Sociale'] = df.iloc[:, 0]
-
-    # Riconoscimento colonna URL / Sito
-    if 'Sito Web' not in df.columns:
-        for candidate in ['Sito', 'URL', 'Website', 'Dominio', 'Link']:
-            if candidate in df.columns:
-                df['Sito Web'] = df[candidate]
-                break
-        if 'Sito Web' not in df.columns:
-            df['Sito Web'] = 'N/D'
-
-    # Inizializzazione colonne mancanti
+    # Inizializzazione colonne workflow se mancanti
     if 'Stato Workflow' not in df.columns:
         df['Stato Workflow'] = 'Importato'
 
@@ -166,12 +161,13 @@ with tab_scheda:
     
     lead_info = df_lead[df_lead['Ragione Sociale'] == azienda_selezionata].iloc[0]
     sito_url = str(lead_info.get('Sito Web', 'N/D')).strip()
+    sede_info = str(lead_info.get('Sede', 'N/D')).strip()
     
     st.markdown(f"### 🏢 Scheda Cliente: **{lead_info['Ragione Sociale']}**")
     
     col_info1, col_info2, col_info3 = st.columns(3)
     col_info1.markdown(f"**Sito Web:** [{sito_url}]({sito_url if sito_url.startswith('http') else 'https://' + sito_url})" if sito_url != 'N/D' else "**Sito Web:** N/D")
-    col_info2.markdown(f"**Sede:** {lead_info.get('Sede', 'N/D')}")
+    col_info2.markdown(f"**Sede:** {sede_info}")
     col_info3.markdown(f"**Stato Attuale:** `{lead_info.get('Stato Workflow', 'Importato')}`")
     
     st.markdown("---")
@@ -223,7 +219,6 @@ with tab_scheda:
     with tab_report:
         st.subheader("📄 Gestione Report Audit Completo")
         
-        # Caricamento via File o Incolla Testo
         file_caricato = st.file_uploader("📂 Carica File Report (.txt, .md):", type=["txt", "md"])
         
         testo_iniziale = str(lead_info.get('Report Audit Completo', ''))
@@ -255,7 +250,7 @@ with tab_scheda:
         prompt_testo = f"""Agisci come Senior Web Audit Consultant ed esegui un Audit Web V2 per il sito:
 URL: {sito_url}
 Azienda: {lead_info['Ragione Sociale']}
-Sede: {lead_info.get('Sede', 'N/D')}
+Sede: {sede_info}
 
 Applica le regole del Manuale Tecnico Audit Web V2:
 1. Classifica i rilievi in MISURATO, OSSERVATO, INFERITO, NON VERIFICABILE.
