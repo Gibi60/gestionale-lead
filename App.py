@@ -11,7 +11,7 @@ st.set_page_config(page_title="Gestionale Lead & Web Audit V2", layout="wide", p
 
 st.title("💼 Dashboard Gestionale Lead & Audit V2")
 
-# --- FUNZIONE SCANSIONE SEO REALE CON USER-AGENT COMPLETO ---
+# --- FUNZIONE SCANSIONE SEO REALE ---
 def scansione_seo_reale(url):
     if not url or pd.isna(url) or str(url).strip() in ['', 'nan', 'N/D']:
         return "❌ Nessun URL valido specificato per questa azienda.", []
@@ -24,7 +24,6 @@ def scansione_seo_reale(url):
     criticita = []
     start_time = time.time()
     
-    # Header estesi per simulare un browser reale ed evitare blocchi 403
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
@@ -50,7 +49,7 @@ def scansione_seo_reale(url):
             risultati.append(f"⏱️ **Tempo Risposta Server:** {load_time}s")
             
             if load_time > 2.5:
-                criticita.append(f"- Tempo di risposta del server elevato ({load_time}s).")
+                criticita.append("⏱️ Tempo di risposta del server elevato")
             
             # Tag Title
             title_match = re.search(r'<title>(.*?)</title>', html, re.IGNORECASE | re.DOTALL)
@@ -58,7 +57,7 @@ def scansione_seo_reale(url):
                 risultati.append(f"📌 **Tag Title:** {title_match.group(1).strip()}")
             else:
                 risultati.append("⚠️ **Tag Title:** MANCANTE o vuoto")
-                criticita.append("- Tag Title mancante o non valorizzato correttamente.")
+                criticita.append("❌ Assenza o errore nel Tag Title")
                 
             # Meta Description
             desc_match = re.search(r'<meta\s+name=["\']description["\']\s+content=["\'](.*?)["\']', html, re.IGNORECASE)
@@ -66,7 +65,7 @@ def scansione_seo_reale(url):
                 risultati.append(f"📝 **Meta Description:** Presente ({len(desc_match.group(1))} caratteri)")
             else:
                 risultati.append("⚠️ **Meta Description:** MANCANTE o non rilevata")
-                criticita.append("- Meta Description non impostata (impatto negativo sui CTR nei risultati di ricerca).")
+                criticita.append("❌ Assenza Meta Description")
                 
             # Tag H1
             h1_match = re.search(r'<h1[^>]*>(.*?)</h1>', html, re.IGNORECASE | re.DOTALL)
@@ -75,18 +74,18 @@ def scansione_seo_reale(url):
                 risultati.append(f"🏷️ **Tag H1 Principale:** {clean_h1}")
             else:
                 risultati.append("⚠️ **Tag H1 Principale:** MANCANTE")
-                criticita.append("- Tag H1 principale mancante nella homepage.")
+                criticita.append("❌ Assenza Tag H1 principale")
                 
     except urllib.error.HTTPError as e:
         if e.code == 403:
-            risultati.append(f"⚠️ **Sito Attivo ma Protezione Firewall Rilevata (HTTP 403)**: Il server blocca le richieste automatizzate diretta da IP cloud. Il sito è raggiungibile da browser.")
-            criticita.append("- Presenza di protezione/firewall che blocca gli scansionatori automatici.")
+            risultati.append(f"⚠️ **Protezione Firewall (HTTP 403)**: Il server blocca gli script automatici.")
+            criticita.append("🔒 Errore HTTP 403 (Blocco bot/firewall)")
         else:
-            risultati.append(f"❌ **Errore HTTP {e.code}** raggiungendo {url_pulito}.")
-            criticita.append(f"- Il server restituisce errore HTTP {e.code}.")
+            risultati.append(f"❌ **Errore HTTP {e.code}**")
+            criticita.append(f"❌ Errore HTTP {e.code}")
     except Exception as e:
-        risultati.append(f"❌ **Impossibile raggiungere il sito web** ({url_pulito}). Errore: {e}")
-        criticita.append("- Sito web temporaneamente o permanentemente irraggiungibile.")
+        risultati.append(f"❌ **Impossibile raggiungere il sito** ({url_pulito}).")
+        criticita.append("❌ Sito non raggiungibile o offline")
         
     return "\n\n".join(risultati), criticita
 
@@ -140,13 +139,13 @@ def load_data():
 
 df_lead = load_data()
 
-# --- TAB DI NAVIGAZIONE PRINCIPALE ---
+# --- NAVIGAZIONE PRINCIPALE ---
 tab_panoramica, tab_scheda = st.tabs([
     "📊 Panoramica Database & Filtri", 
     "🏢 Scheda Dettaglio Lead & Audit V2"
 ])
 
-# TAB 1: PANORAMICA DATABASE
+# TAB 1: PANORAMICA
 with tab_panoramica:
     st.subheader("📊 Tabella Generale Lead & Filtri Avanzati")
     col_k1, col_k2, col_k3 = st.columns(3)
@@ -200,20 +199,59 @@ with tab_scheda:
             with st.spinner("Scansione del sito in corso..."):
                 report_scansione, lista_crit = scansione_seo_reale(sito_url)
                 st.session_state['ultimo_report_scansione'] = report_scansione
-                
-                if lista_crit:
-                    st.session_state[f'note_{azienda_selezionata}'] = "\n".join(lista_crit)
-                else:
-                    st.session_state[f'note_{azienda_selezionata}'] = "Nessuna criticità di base rilevata."
-        
+
         if 'ultimo_report_scansione' in st.session_state:
             st.info(st.session_state['ultimo_report_scansione'])
 
     st.markdown("---")
 
-    # TAB DI LAVORO
+    # --- SEZIONE CHECKLIST INTERATTIVA CRITICITÀ & RATING ---
+    st.subheader("✅ Validazione Rapida Criticità SEO & Score Opportunità Lead")
+    st.write("Seleziona gli elementi critici emersi dall'analisi per calcolare l'indice di opportunità commerciale:")
+
+    # Lista dei controlli standard
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        chk_https = st.checkbox("Mancanza HTTPS / SSL sicuro", key=f"chk_https_{azienda_selezionata}")
+        chk_403 = st.checkbox("Errore HTTP 403 / Blocco Bot", key=f"chk_403_{azienda_selezionata}")
+        chk_title = st.checkbox("Assenza o Errore Tag Title", key=f"chk_title_{azienda_selezionata}")
+    with c2:
+        chk_desc = st.checkbox("Assenza Meta Description", key=f"chk_desc_{azienda_selezionata}")
+        chk_h1 = st.checkbox("Assenza Tag H1 Principale", key=f"chk_h1_{azienda_selezionata}")
+        chk_robots = st.checkbox("Assenza Robots.txt ottimizzato", key=f"chk_robots_{azienda_selezionata}")
+    with c3:
+        chk_sitemap = st.checkbox("Assenza Sitemap.XML", key=f"chk_sitemap_{azienda_selezionata}")
+        chk_speed = st.checkbox("Lentezza di Caricamento", key=f"chk_speed_{azienda_selezionata}")
+        chk_mobile = st.checkbox("Problemi UX / Mobile non ottimizzato", key=f"chk_mobile_{azienda_selezionata}")
+        chk_eeat = st.checkbox("Carenza Segnali E-E-A-T / Contenuti", key=f"chk_eeat_{azienda_selezionata}")
+
+    # Calcolo percentuale criticità su un totale di 10 elementi
+    elementi_totali = 10
+    elementi_critici = sum([
+        chk_https, chk_403, chk_title, chk_desc, chk_h1, 
+        chk_robots, chk_sitemap, chk_speed, chk_mobile, chk_eeat
+    ])
+    
+    score_opportunita = int((elementi_critici / elementi_totali) * 100)
+
+    # Visualizzazione metrica rating
+    st.markdown("---")
+    col_score1, col_score2 = st.columns([1, 3])
+    with col_score1:
+        st.metric(label="🎯 Potenziale di Contatto", value=f"{score_opportunita}%", delta=f"{elementi_critici}/10 Criticità")
+    with col_score2:
+        if score_opportunita >= 70:
+            st.error("🔥 **Alta Priorità di Contatto**: Il sito presenta gravi lacune digitali. Ottimo margine per proporre un intervento correttivo immediato.")
+        elif score_opportunita >= 40:
+            st.warning("⚠️ **Media Priorità**: Presenta diverse aree di miglioramento SEO e strategico.")
+        else:
+            st.success("✅ **Bassa Priorità / Ottimo stato**: Il sito ha già una buona base tecnica impostata.")
+
+    st.markdown("---")
+
+    # TAB DI LAVORO SU SCHEDA
     tab_note, tab_report, tab_prompt = st.tabs([
-        "✏️ Modifica Note & Workflow", 
+        "✏️ Note, Workflow & Pitch", 
         "📄 Report Web Audit V2 (Generato / Caricato)", 
         "📋 Prompt V2 (Opzionale per IA)"
     ])
@@ -228,20 +266,28 @@ with tab_scheda:
             idx = stati_possibili.index(stato_attuale) if stato_attuale in stati_possibili else 0
             stato_wf = st.selectbox("Stato Avanzamento Workflow:", stati_possibili, index=idx)
         
-        valore_default_note = st.session_state.get(
-            f'note_{azienda_selezionata}', 
-            str(lead_info.get('Note Audit Digitale', 'Nessuna criticità di base rilevata.'))
-        )
-        
+        # Generazione automatica del testo criticità basato sui check spuntati
+        critiche_attive = []
+        if chk_https: critiche_attive.append("- Mancanza di un protocollo HTTPS/SSL sicuro.")
+        if chk_403: critiche_attive.append("- Presenza di restrizioni o errori HTTP (es. 403) che bloccano l'indicizzazione.")
+        if chk_title: critiche_attive.append("- Tag Title assente o non ottimizzato per le keyword di settore.")
+        if chk_desc: critiche_attive.append("- Assenza di Meta Description, penalizzando i CTR sui motori di ricerca.")
+        if chk_h1: critiche_attive.append("- Assenza della gerarchia corretta con tag H1 principale.")
+        if chk_robots: critiche_attive.append("- File Robots.txt assente o non configurato correttamente.")
+        if chk_sitemap: critiche_attive.append("- Sitemap XML non rilevata o non ottimizzata.")
+        if chk_speed: critiche_attive.append("- Tempi di risposta del server elevati (impatto negativo su Core Web Vitals).")
+        if chk_mobile: critiche_attive.append("- Ottimizzazione mobile e UX migliorabile.")
+        if chk_eeat: critiche_attive.append("- Carenza di segnali E-E-A-T (autorevolezza, contatti chiari, portfolio).")
+
+        testo_critiche_automatico = "\n".join(critiche_attive) if critiche_attive else "Nessuna criticità di base rilevata."
+
         note_sintesi = st.text_area(
-            "📝 Note / Criticità SEO per Pitch Commerciale:",
-            value=valore_default_note,
-            height=120,
-            help="Questi punti verranno usati per personalizzare la mail di contatto."
+            "📝 Note / Criticità SEO (Auto-compilate dai checkbox):",
+            value=testo_critiche_automatico,
+            height=120
         )
         
         if st.button("💾 Salva Dettagli Lead", type="primary"):
-            st.session_state[f'note_{azienda_selezionata}'] = note_sintesi
             st.success(f"Dati di {lead_info['Ragione Sociale']} aggiornati con successo!")
 
     with tab_report:
@@ -272,7 +318,7 @@ with tab_scheda:
 
     with tab_prompt:
         st.subheader("📋 Prompt V2 Pronto per Chat IA generiche")
-        st.info("💡 **Nota:** Se usi già il tuo **Custom GPT dedicato**, puoi ignorare questo prompt e inviargli direttamente solo l'URL.")
+        st.info("💡 **Nota:** Se usi già il tuo **Custom GPT dedicato**, puoi ignorare questo tab.")
         
         prompt_testo = f"""Agisci come Senior Web Audit Consultant ed esegui un Audit Web V2 per il sito:
 URL: {sito_url}
@@ -289,10 +335,10 @@ Evidenze rilevate da integrare:
 
     pitch_mail = f"""Gentile Direzione di {lead_info['Ragione Sociale']},
 
-Analizzando la presenza digitale del Vostro sito ({sito_url}), abbiamo rilevato i seguenti aspetti su cui intervenire:
+Analizzando la presenza digitale del Vostro sito ({sito_url}), abbiamo riscontrato alcune aree di miglioramento strategico:
 {note_sintesi}
 
-Questo divario digitale potrebbe limitare le Vostre opportunità commerciali sui motori di ricerca.
+Questo divario digitale potrebbe limitare le Vostre opportunità commerciali sui motori di ricerca rispetto ai vostri competitor.
 
 Abbiamo elaborato un audit preliminare di posizionamento SEO e visibilità B2B specifica per il Vostro settore.
 """
