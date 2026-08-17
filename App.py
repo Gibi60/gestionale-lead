@@ -80,19 +80,20 @@ def load_data():
         except Exception as e:
             st.error(f"Errore nel caricamento del file {file_path}: {e}")
             df = pd.DataFrame({
-                'Ragione Sociale': ['Advan Srl'],
-                'Sito Web': ['https://www.advanimplantology.com'],
-                'Sede': ['Amaro (UD)'],
+                'Azienda': ['Advan Srl'],
+                'WEB': ['https://www.advanimplantology.com'],
+                'SEDE': ['Amaro (UD)'],
                 'Stato Workflow': ['Importato'],
                 'Note Audit Digitale': ['Nessuna criticità di base rilevata.']
             })
 
-    # Mappatura automatica e flessibile delle colonne (Case-Insensitive)
+    # Pulizia spazi nei nomi delle colonne originarie
+    df.columns = [str(col).strip() for col in df.columns]
+
+    # Mappatura sicura delle colonne chiave
     col_map = {}
     for col in df.columns:
-        c_clean = str(col).strip()
-        c_lower = c_clean.lower()
-        
+        c_lower = col.lower()
         if c_lower in ['azienda', 'ragione sociale', 'ragionesociale', 'nome', 'company']:
             col_map[col] = 'Ragione Sociale'
         elif c_lower in ['web', 'sito', 'sito web', 'sitoweb', 'url', 'website', 'link', 'dominio']:
@@ -102,7 +103,16 @@ def load_data():
             
     df = df.rename(columns=col_map)
 
-    # Inizializzazione colonne workflow se mancanti
+    # Fallback estremo se la colonna Ragione Sociale manca ancora
+    if 'Ragione Sociale' not in df.columns:
+        df['Ragione Sociale'] = df.iloc[:, 0]
+
+    if 'Sito Web' not in df.columns:
+        df['Sito Web'] = 'N/D'
+
+    if 'Sede' not in df.columns:
+        df['Sede'] = 'N/D'
+
     if 'Stato Workflow' not in df.columns:
         df['Stato Workflow'] = 'Importato'
 
