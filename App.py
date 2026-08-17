@@ -10,16 +10,17 @@ st.set_page_config(page_title="Gestionale Lead & Web Audit V2", layout="wide", p
 
 st.title("💼 Dashboard Gestionale Lead & Audit V2")
 
-# --- FUNZIONE SCANSIONE SEO REALE ---
+# --- FUNZIONE SCANSIONE SEO REALE CON ESTRAZIONE CRITICITÀ ---
 def scansione_seo_reale(url):
     if not url or pd.isna(url) or str(url).strip() in ['', 'nan', 'N/D']:
-        return "❌ Nessun URL valido specificato per questa azienda."
+        return "❌ Nessun URL valido specificato per questa azienda.", []
     
     url_pulito = str(url).strip()
     if not url_pulito.startswith(('http://', 'https://')):
         url_pulito = 'https://' + url_pulito
         
     risultati = []
+    criticita = []
     start_time = time.time()
     
     try:
@@ -41,12 +42,16 @@ def scansione_seo_reale(url):
             risultati.append(f"✅ **Stato Server:** HTTP {status_code}")
             risultati.append(f"⏱️ **Tempo Risposta Server:** {load_time}s")
             
+            if load_time > 2.5:
+                criticita.append(f"- Tempo di risposta del server elevato ({load_time}s).")
+            
             # Tag Title
             title_match = re.search(r'<title>(.*?)</title>', html, re.IGNORECASE | re.DOTALL)
             if title_match and title_match.group(1).strip():
                 risultati.append(f"📌 **Tag Title:** {title_match.group(1).strip()}")
             else:
                 risultati.append("⚠️ **Tag Title:** MANCANTE o vuoto")
+                criticita.append("- Tag Title mancante o non valorizzato correttamente.")
                 
             # Meta Description
             desc_match = re.search(r'<meta\s+name=["\']description["\']\s+content=["\'](.*?)["\']', html, re.IGNORECASE)
@@ -54,6 +59,7 @@ def scansione_seo_reale(url):
                 risultati.append(f"📝 **Meta Description:** Presente ({len(desc_match.group(1))} caratteri)")
             else:
                 risultati.append("⚠️ **Meta Description:** MANCANTE o non rilevata")
+                criticita.append("- Meta Description non impostata (impatto negativo sui CTR nei risultati di ricerca).")
                 
             # Tag H1
             h1_match = re.search(r'<h1[^>]*>(.*?)</h1>', html, re.IGNORECASE | re.DOTALL)
@@ -62,13 +68,15 @@ def scansione_seo_reale(url):
                 risultati.append(f"🏷️ **Tag H1 Principale:** {clean_h1}")
             else:
                 risultati.append("⚠️ **Tag H1 Principale:** MANCANTE")
+                criticita.append("- Tag H1 principale mancante nella homepage.")
                 
     except Exception as e:
         risultati.append(f"❌ **Impossibile raggiungere il sito web** ({url_pulito}). Errore: {e}")
+        criticita.append("- Sito web temporaneamente o permanentemente irraggiungibile.")
         
-    return "\n\n".join(risultati)
+    return "\n\n".join(risultati), criticita
 
-# --- CARICAMENTO DATI ROBUSTO ---
+# --- CARICAMENTO DATI ---
 @st.cache_data
 def load_data():
     file_path = "Gestione_Lead_Locale.csv" 
@@ -80,17 +88,15 @@ def load_data():
         except Exception as e:
             st.error(f"Errore nel caricamento del file {file_path}: {e}")
             df = pd.DataFrame({
-                'Azienda': ['Advan Srl'],
-                'WEB': ['https://www.advanimplantology.com'],
+                'Azienda': ['Plan 1 Health Srl'],
+                'WEB': ['https://www.p1h.it'],
                 'SEDE': ['Amaro (UD)'],
                 'Stato Workflow': ['Importato'],
                 'Note Audit Digitale': ['Nessuna criticità di base rilevata.']
             })
 
-    # Pulizia spazi nei nomi delle colonne originarie
     df.columns = [str(col).strip() for col in df.columns]
 
-    # Mappatura sicura delle colonne chiave
     col_map = {}
     for col in df.columns:
         c_lower = col.lower()
@@ -103,22 +109,16 @@ def load_data():
             
     df = df.rename(columns=col_map)
 
-    # Fallback estremo se la colonna Ragione Sociale manca ancora
     if 'Ragione Sociale' not in df.columns:
         df['Ragione Sociale'] = df.iloc[:, 0]
-
     if 'Sito Web' not in df.columns:
         df['Sito Web'] = 'N/D'
-
     if 'Sede' not in df.columns:
         df['Sede'] = 'N/D'
-
     if 'Stato Workflow' not in df.columns:
         df['Stato Workflow'] = 'Importato'
-
     if 'Report Audit Completo' not in df.columns:
         df['Report Audit Completo'] = ''
-
     if 'Note Audit Digitale' not in df.columns:
         df['Note Audit Digitale'] = 'Nessuna criticità di base rilevata.'
 
@@ -132,19 +132,14 @@ tab_panoramica, tab_scheda = st.tabs([
     "🏢 Scheda Dettaglio Lead & Audit V2"
 ])
 
-# ==========================================
 # TAB 1: PANORAMICA DATABASE
-# ==========================================
 with tab_panoramica:
     st.subheader("📊 Tabella Generale Lead & Filtri Avanzati")
-    
     col_k1, col_k2, col_k3 = st.columns(3)
     col_k1.metric("Totale Lead nel Database", len(df_lead))
-    
     counts = df_lead['Stato Workflow'].value_counts()
     col_k2.metric("In Analisi / Audit", counts.get("In Analisi", 0) + counts.get("Audit Generato", 0))
     col_k3.metric("Contattati / Trattativa", counts.get("Contattato", 0) + counts.get("In Trattativa", 0))
-    
     st.markdown("---")
     
     col_f1, col_f2 = st.columns(2)
@@ -162,9 +157,7 @@ with tab_panoramica:
         
     st.dataframe(df_filtrato, use_container_width=True, height=420)
 
-# ==========================================
 # TAB 2: SCHEDA DETTAGLIO LEAD
-# ==========================================
 with tab_scheda:
     elenco_aziende = df_lead['Ragione Sociale'].dropna().unique().tolist()
     azienda_selezionata = st.selectbox("🎯 Seleziona l'Azienda da analizzare:", elenco_aziende, key="select_azienda_tab2")
@@ -191,19 +184,25 @@ with tab_scheda:
     with col_res:
         if lancia_scansione:
             with st.spinner("Scansione del sito in corso..."):
-                report_scansione = scansione_seo_reale(sito_url)
+                report_scansione, lista_crit = scansione_seo_reale(sito_url)
                 st.session_state['ultimo_report_scansione'] = report_scansione
+                
+                # Popola automaticamente le note se sono state trovate criticità
+                if lista_crit:
+                    st.session_state[f'note_{azienda_selezionata}'] = "\n".join(lista_crit)
+                else:
+                    st.session_state[f'note_{azienda_selezionata}'] = "Nessuna criticità critica di base rilevata."
         
         if 'ultimo_report_scansione' in st.session_state:
             st.info(st.session_state['ultimo_report_scansione'])
 
     st.markdown("---")
 
-    # TAB DI LAVORO SU SCHEDA
+    # TAB DI LAVORO
     tab_note, tab_report, tab_prompt = st.tabs([
         "✏️ Modifica Note & Workflow", 
         "📄 Report Web Audit V2 (Generato / Caricato)", 
-        "📋 Prompt V2 per ChatGPT/Gemini"
+        "📋 Prompt V2 (Opzionale per IA)"
     ])
     
     with tab_note:
@@ -216,19 +215,25 @@ with tab_scheda:
             idx = stati_possibili.index(stato_attuale) if stato_attuale in stati_possibili else 0
             stato_wf = st.selectbox("Stato Avanzamento Workflow:", stati_possibili, index=idx)
         
+        # Recupera valore salvato o di sessione
+        valore_default_note = st.session_state.get(
+            f'note_{azienda_selezionata}', 
+            str(lead_info.get('Note Audit Digitale', 'Nessuna criticità di base rilevata.'))
+        )
+        
         note_sintesi = st.text_area(
             "📝 Note / Criticità SEO per Pitch Commerciale:",
-            value=str(lead_info.get('Note Audit Digitale', 'Nessuna criticità di base rilevata.')),
+            value=valore_default_note,
             height=120,
             help="Questi punti verranno usati per personalizzare la mail di contatto."
         )
         
         if st.button("💾 Salva Dettagli Lead", type="primary"):
+            st.session_state[f'note_{azienda_selezionata}'] = note_sintesi
             st.success(f"Dati di {lead_info['Ragione Sociale']} aggiornati con successo!")
 
     with tab_report:
         st.subheader("📄 Gestione Report Audit Completo")
-        
         file_caricato = st.file_uploader("📂 Carica File Report (.txt, .md):", type=["txt", "md"])
         
         testo_iniziale = str(lead_info.get('Report Audit Completo', ''))
@@ -254,20 +259,15 @@ with tab_scheda:
             )
 
     with tab_prompt:
-        st.subheader("📋 Prompt V2 Pronto per ChatGPT / Gemini")
-        st.write("Copia questo prompt e incollalo nell'IA per generare l'analisi completa.")
+        st.subheader("📋 Prompt V2 Pronto per Chat IA generiche")
+        st.info("💡 **Nota:** Se usi già il tuo **Custom GPT dedicato**, puoi ignorare questo prompt e inviargli direttamente solo l'URL.")
         
         prompt_testo = f"""Agisci come Senior Web Audit Consultant ed esegui un Audit Web V2 per il sito:
 URL: {sito_url}
 Azienda: {lead_info['Ragione Sociale']}
 Sede: {sede_info}
 
-Applica le regole del Manuale Tecnico Audit Web V2:
-1. Classifica i rilievi in MISURATO, OSSERVATO, INFERITO, NON VERIFICABILE.
-2. Calcola lo score per le 8 aree (SEO tecnica, On-page, Performance, UX, Contenuti E-E-A-T, CRO, Accessibilità, AI Discoverability).
-3. Produci: Executive Summary, Registro Evidenze, Scorecard, Quick Wins e Piano d'azione prioritizzato.
-
-Evidenze preliminari già registrate:
+Evidenze rilevate da integrare:
 {note_sintesi}"""
 
         st.code(prompt_testo, language="text")
@@ -277,7 +277,7 @@ Evidenze preliminari già registrate:
 
     pitch_mail = f"""Gentile Direzione di {lead_info['Ragione Sociale']},
 
-Analizzando la presenza digitale del Vostro sito ({sito_url}), abbiamo rilevato i seguenti aspetti di impatto:
+Analizzando la presenza digitale del Vostro sito ({sito_url}), abbiamo rilevato i seguenti aspetti su cui intervenire:
 {note_sintesi}
 
 Questo divario digitale potrebbe limitare le Vostre opportunità commerciali sui motori di ricerca.
