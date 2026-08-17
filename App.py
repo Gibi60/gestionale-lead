@@ -134,6 +134,8 @@ def load_data():
         df['Report Audit Completo'] = ''
     if 'Note Audit Digitale' not in df.columns:
         df['Note Audit Digitale'] = 'Nessuna criticità di base rilevata.'
+    if 'Score Opportunità (%)' not in df.columns:
+        df['Score Opportunità (%)'] = 0
 
     return df
 
@@ -145,9 +147,10 @@ tab_panoramica, tab_scheda = st.tabs([
     "🏢 Scheda Dettaglio Lead & Audit V2"
 ])
 
-# TAB 1: PANORAMICA
+# TAB 1: PANORAMICA CON ORDINAMENTO OPPORTUNITÀ
 with tab_panoramica:
-    st.subheader("📊 Tabella Generale Lead & Filtri Avanzati")
+    st.subheader("📊 Tabella Generale Lead & Classifica Opportunità")
+    
     col_k1, col_k2, col_k3 = st.columns(3)
     col_k1.metric("Totale Lead nel Database", len(df_lead))
     counts = df_lead['Stato Workflow'].value_counts()
@@ -155,18 +158,29 @@ with tab_panoramica:
     col_k3.metric("Contattati / Trattativa", counts.get("Contattato", 0) + counts.get("In Trattativa", 0))
     st.markdown("---")
     
-    col_f1, col_f2 = st.columns(2)
+    col_f1, col_f2, col_f3 = st.columns(3)
     with col_f1:
-        ricerca_nome = st.text_input("🔍 Cerca Azienda per Ragione Sociale / Nome:")
+        ricerca_nome = st.text_input("🔍 Cerca Azienda:")
     with col_f2:
         stati_disponibili = ["Tutti"] + df_lead['Stato Workflow'].dropna().unique().tolist()
         filtro_stato = st.selectbox("🎯 Filtra per Stato Workflow:", stati_disponibili)
+    with col_f3:
+        ordina_score = st.checkbox("🔥 Ordina per % Opportunità (Dalla più alta)")
     
+    # Sincronizza lo score corrente dal session_state nel dataframe di visualizzazione
+    for idx, row in df_lead.iterrows():
+        azi = row['Ragione Sociale']
+        if f'score_{azi}' in st.session_state:
+            df_lead.loc[idx, 'Score Opportunità (%)'] = st.session_state[f'score_{azi}']
+
     df_filtrato = df_lead.copy()
     if ricerca_nome:
         df_filtrato = df_filtrato[df_filtrato['Ragione Sociale'].astype(str).str.contains(ricerca_nome, case=False, na=False)]
     if filtro_stato != "Tutti":
         df_filtrato = df_filtrato[df_filtrato['Stato Workflow'] == filtro_stato]
+    
+    if ordina_score:
+        df_filtrato = df_filtrato.sort_values(by='Score Opportunità (%)', ascending=False)
         
     st.dataframe(df_filtrato, use_container_width=True, height=420)
 
@@ -209,7 +223,6 @@ with tab_scheda:
     st.subheader("✅ Validazione Rapida Criticità SEO & Score Opportunità Lead")
     st.write("Seleziona gli elementi critici emersi dall'analisi per calcolare l'indice di opportunità commerciale:")
 
-    # Lista dei controlli standard
     c1, c2, c3 = st.columns(3)
     with c1:
         chk_https = st.checkbox("Mancanza HTTPS / SSL sicuro", key=f"chk_https_{azienda_selezionata}")
@@ -225,7 +238,6 @@ with tab_scheda:
         chk_mobile = st.checkbox("Problemi UX / Mobile non ottimizzato", key=f"chk_mobile_{azienda_selezionata}")
         chk_eeat = st.checkbox("Carenza Segnali E-E-A-T / Contenuti", key=f"chk_eeat_{azienda_selezionata}")
 
-    # Calcolo percentuale criticità su un totale di 10 elementi
     elementi_totali = 10
     elementi_critici = sum([
         chk_https, chk_403, chk_title, chk_desc, chk_h1, 
@@ -233,8 +245,10 @@ with tab_scheda:
     ])
     
     score_opportunita = int((elementi_critici / elementi_totali) * 100)
+    
+    # Salva nello state per la tabella generale
+    st.session_state[f'score_{azienda_selezionata}'] = score_opportunita
 
-    # Visualizzazione metrica rating
     st.markdown("---")
     col_score1, col_score2 = st.columns([1, 3])
     with col_score1:
@@ -266,7 +280,6 @@ with tab_scheda:
             idx = stati_possibili.index(stato_attuale) if stato_attuale in stati_possibili else 0
             stato_wf = st.selectbox("Stato Avanzamento Workflow:", stati_possibili, index=idx)
         
-        # Generazione automatica del testo criticità basato sui check spuntati
         critiche_attive = []
         if chk_https: critiche_attive.append("- Mancanza di un protocollo HTTPS/SSL sicuro.")
         if chk_403: critiche_attive.append("- Presenza di restrizioni o errori HTTP (es. 403) che bloccano l'indicizzazione.")
