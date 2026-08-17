@@ -6,28 +6,38 @@ st.set_page_config(page_title="Gestionale Lead & Web Audit V2", layout="wide", p
 
 st.title("💼 Dashboard Gestionale Lead & Audit V2")
 
-# --- CARICAMENTO DATI ---
+# --- CARICAMENTO DATI ROBUSTO ---
 @st.cache_data
 def load_data():
     file_path = "Gestione_Lead_Locale.csv" 
     try:
-        df = pd.read_csv(file_path)
-    except Exception as e:
-        st.error(f"Errore nel caricamento del file {file_path}: {e}")
-        df = pd.DataFrame({
-            'Ragione Sociale': ['Advan Srl'],
-            'Sito Web': ['https://www.advanimplantology.com'],
-            'Sede': ['Amaro (UD)'],
-            'Stato Workflow': ['Importato'],
-            'Note Audit Digitale': ['Nessuna criticità di base rilevata.']
-        })
+        # Riconoscimento automatico del separatore (virgola o punto e virgola)
+        df = pd.read_csv(file_path, sep=None, engine='python', on_bad_lines='skip')
+    except Exception:
+        try:
+            # Secondo tentativo esplicito con punto e virgola
+            df = pd.read_csv(file_path, sep=';', on_bad_lines='skip')
+        except Exception as e:
+            st.error(f"Errore nel caricamento del file {file_path}: {e}")
+            df = pd.DataFrame({
+                'Ragione Sociale': ['Advan Srl'],
+                'Sito Web': ['https://www.advanimplantology.com'],
+                'Sede': ['Amaro (UD)'],
+                'Stato Workflow': ['Importato'],
+                'Note Audit Digitale': ['Nessuna criticità di base rilevata.']
+            })
 
-    # Mappatura e pulizia nomi colonne
+    # Pulizia nomi colonne da eventuali spazi extra
+    df.columns = [str(col).strip() for col in df.columns]
+
+    # Mappatura colonne
     if 'Ragione Sociale' not in df.columns:
         if 'Azienda' in df.columns:
             df['Ragione Sociale'] = df['Azienda']
         elif 'Nome' in df.columns:
             df['Ragione Sociale'] = df['Nome']
+        elif len(df.columns) > 0:
+            df['Ragione Sociale'] = df.iloc[:, 0]
 
     if 'Sito Web' not in df.columns and 'Sito' in df.columns:
         df['Sito Web'] = df['Sito']
@@ -106,7 +116,7 @@ with tab_report:
         st.download_button(
             label="⬇️ Scarica Report Audit (.txt)",
             data=audit_completo,
-            file_name=f"Report_Audit_{lead_info['Ragione Sociale'].replace(' ', '_')}.txt",
+            file_name=f"Report_Audit_{str(lead_info['Ragione Sociale']).replace(' ', '_')}.txt",
             mime="text/plain"
         )
     else:
