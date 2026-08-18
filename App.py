@@ -170,7 +170,7 @@ with tab_scheda:
         elenco_aziende = df_lead['Ragione Sociale'].dropna().unique().tolist()
         azienda_selezionata = st.selectbox("🎯 Seleziona Azienda:", elenco_aziende, key="sel_az")
         
-        idx_row = df_lead.index[df_lead['Ragione Sociale'] == azienda_selezionata][0]
+        idx_row = df_lead[df_lead['Ragione Sociale'] == azienda_selezionata].index[0]
         lead_info = df_lead.loc[idx_row]
         
         sito_url = str(lead_info.get('Sito Web', 'N/D')).strip()
@@ -216,8 +216,8 @@ with tab_scheda:
             note_sintesi = st.text_area("Note SEO:", value=str(lead_info.get('Note Audit Digitale', '')), height=150)
             
             if st.button("💾 Salva Note & Stato"):
-                df_lead.at[idx_row, 'Note Audit Digitale'] = str(note_sintesi)
-                df_lead.at[idx_row, 'Stato Workflow'] = str(stato_wf)
+                df_lead.loc[idx_row, 'Note Audit Digitale'] = str(note_sintesi)
+                df_lead.loc[idx_row, 'Stato Workflow'] = str(stato_wf)
                 save_data(df_lead)
                 st.success("Dati salvati nel file CSV!")
 
@@ -251,26 +251,26 @@ with tab_scheda:
             chk_cookie = l2.checkbox("Cookie Banner", value=bool(lead_info.get('Chk_Cookie', False)))
 
             if st.button("💾 Salva Validazione e Calcola Score"):
-                df_lead.at[idx_row, 'Chk_Https'] = bool(chk_https)
-                df_lead.at[idx_row, 'Chk_Title'] = bool(chk_title)
-                df_lead.at[idx_row, 'Chk_Desc'] = bool(chk_desc)
-                df_lead.at[idx_row, 'Chk_H1'] = bool(chk_h1)
-                df_lead.at[idx_row, 'Chk_Sitemap'] = bool(chk_sitemap)
-                df_lead.at[idx_row, 'Chk_Robots'] = bool(chk_robots)
-                df_lead.at[idx_row, 'Chk_Nav'] = bool(chk_nav)
-                df_lead.at[idx_row, 'Chk_Cta'] = bool(chk_cta)
-                df_lead.at[idx_row, 'Chk_Form'] = bool(chk_form)
-                df_lead.at[idx_row, 'Chk_Pop'] = bool(chk_pop)
-                df_lead.at[idx_row, 'Chk_Eeat'] = bool(chk_eeat)
-                df_lead.at[idx_row, 'Chk_Faq'] = bool(chk_faq)
-                df_lead.at[idx_row, 'Chk_Nap'] = bool(chk_nap)
-                df_lead.at[idx_row, 'Chk_Piva'] = bool(chk_piva)
-                df_lead.at[idx_row, 'Chk_Gdpr'] = bool(chk_gdpr)
-                df_lead.at[idx_row, 'Chk_Cookie'] = bool(chk_cookie)
+                df_lead.loc[idx_row, 'Chk_Https'] = bool(chk_https)
+                df_lead.loc[idx_row, 'Chk_Title'] = bool(chk_title)
+                df_lead.loc[idx_row, 'Chk_Desc'] = bool(chk_desc)
+                df_lead.loc[idx_row, 'Chk_H1'] = bool(chk_h1)
+                df_lead.loc[idx_row, 'Chk_Sitemap'] = bool(chk_sitemap)
+                df_lead.loc[idx_row, 'Chk_Robots'] = bool(chk_robots)
+                df_lead.loc[idx_row, 'Chk_Nav'] = bool(chk_nav)
+                df_lead.loc[idx_row, 'Chk_Cta'] = bool(chk_cta)
+                df_lead.loc[idx_row, 'Chk_Form'] = bool(chk_form)
+                df_lead.loc[idx_row, 'Chk_Pop'] = bool(chk_pop)
+                df_lead.loc[idx_row, 'Chk_Eeat'] = bool(chk_eeat)
+                df_lead.loc[idx_row, 'Chk_Faq'] = bool(chk_faq)
+                df_lead.loc[idx_row, 'Chk_Nap'] = bool(chk_nap)
+                df_lead.loc[idx_row, 'Chk_Piva'] = bool(chk_piva)
+                df_lead.loc[idx_row, 'Chk_Gdpr'] = bool(chk_gdpr)
+                df_lead.loc[idx_row, 'Chk_Cookie'] = bool(chk_cookie)
                 
                 tot_check = sum([chk_https, chk_title, chk_desc, chk_h1, chk_sitemap, chk_robots, chk_nav, chk_cta, chk_form, chk_pop, chk_eeat, chk_faq, chk_nap, chk_piva, chk_gdpr, chk_cookie])
                 score_calc = round((tot_check / 16) * 100)
-                df_lead.at[idx_row, 'Score Opportunità (%)'] = int(score_calc)
+                df_lead.loc[idx_row, 'Score Opportunità (%)'] = int(score_calc)
                 
                 save_data(df_lead)
                 st.success(f"Validazione salvata con successo! Score opportunità calcolato: {score_calc}%")
@@ -278,10 +278,13 @@ with tab_scheda:
         with tab_report:
             st.write("#### 📄 Report e Sintesi Audit")
             
-            # --- UPLOADER FILE RIPRISTINATO ---
+            # --- UPLOADER FILE ---
             uploaded_file = st.file_uploader("📎 Carica file Audit (formati ammessi: TXT, MD):", type=["txt", "md"])
             
             testo_base = str(lead_info.get('Report Audit Completo', ''))
+            # Pulizia preventiva in caso di campi vuoti riconosciuti come 'nan' da pandas
+            if testo_base.lower() == 'nan':
+                testo_base = ''
             
             # Se viene caricato un file, appendiamo il suo contenuto al testo esistente
             if uploaded_file is not None:
@@ -293,7 +296,8 @@ with tab_scheda:
             audit_completo = st.text_area("Testo Report / Sintesi:", value=testo_base, height=300)
             
             if st.button("💾 Salva Report Finale"):
-                df_lead.at[idx_row, 'Report Audit Completo'] = str(audit_completo)
+                # Utilizziamo loc per evitare TypeError in fase di inserimento testo
+                df_lead.loc[idx_row, 'Report Audit Completo'] = str(audit_completo)
                 save_data(df_lead)
                 st.success("Report e allegati testuali salvati nel database!")
                 
