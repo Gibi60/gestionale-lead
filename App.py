@@ -13,41 +13,40 @@ st.set_page_config(page_title="Gestionale Lead & Web Audit V2", layout="wide", p
 # --- GESTIONE DATI PERSISTENTI & MAPPATURA INTESTAZIONI ---
 FILE_CSV = "Gestione_Lead_Locale.csv"
 
+# Elenco completo delle 27 chiavi della checklist
+CHECK_KEYS = [
+    'Chk_Https', 'Chk_Http403', 'Chk_Title', 'Chk_Desc', 'Chk_H1', 
+    'Chk_Sitemap', 'Chk_Robots', 'Chk_Lat', 'Chk_Mobile', 'Chk_Hreflang',
+    'Chk_Nav', 'Chk_Cta', 'Chk_Form', 'Chk_Pop', 'Chk_Brand', 'Chk_Bread', 'Chk_Trust',
+    'Chk_Eeat', 'Chk_Faq', 'Chk_Blog', 'Chk_Nap', 'Chk_Social',
+    'Chk_Piva', 'Chk_Gdpr', 'Chk_Cookie', 'Chk_Banner', 'Chk_Srl', 'Chk_Pec'
+]
+
 def load_data():
+    default_columns = [
+        'Ragione Sociale', 'Sito Web', 'Sede', 'Stato Workflow', 
+        'Report Audit Completo', 'Note Audit Digitale', 'Score Opportunità (%)'
+    ] + CHECK_KEYS
+
     if not os.path.exists(FILE_CSV):
-        df = pd.DataFrame(columns=[
-            'Ragione Sociale', 'Sito Web', 'Sede', 'Stato Workflow', 
-            'Report Audit Completo', 'Note Audit Digitale', 'Score Opportunità (%)',
-            'Chk_Https', 'Chk_Title', 'Chk_Desc', 'Chk_H1', 'Chk_Sitemap', 'Chk_Robots',
-            'Chk_Nav', 'Chk_Cta', 'Chk_Form', 'Chk_Pop', 'Chk_Eeat', 'Chk_Faq', 'Chk_Nap',
-            'Chk_Piva', 'Chk_Gdpr', 'Chk_Cookie'
-        ])
+        df = pd.DataFrame(columns=default_columns)
         df.to_csv(FILE_CSV, index=False)
         return df
     
     try:
-        # Tenta la lettura automatica del separatore
         df = pd.read_csv(FILE_CSV, sep=None, engine='python', on_bad_lines='skip')
     except Exception:
         try:
-            # Fallback forzato sul punto e virgola
             df = pd.read_csv(FILE_CSV, sep=';', on_bad_lines='skip')
         except Exception:
-            # Fallback estremo se il file è corrotto
-            df = pd.DataFrame(columns=[
-                'Ragione Sociale', 'Sito Web', 'Sede', 'Stato Workflow', 
-                'Report Audit Completo', 'Note Audit Digitale', 'Score Opportunità (%)',
-                'Chk_Https', 'Chk_Title', 'Chk_Desc', 'Chk_H1', 'Chk_Sitemap', 'Chk_Robots',
-                'Chk_Nav', 'Chk_Cta', 'Chk_Form', 'Chk_Pop', 'Chk_Eeat', 'Chk_Faq', 'Chk_Nap',
-                'Chk_Piva', 'Chk_Gdpr', 'Chk_Cookie'
-            ])
+            df = pd.DataFrame(columns=default_columns)
             df.to_csv(FILE_CSV, index=False)
             return df
 
     # Pulizia nomi colonne
     df.columns = [str(col).strip() for col in df.columns]
 
-    # Mappatura semantica delle colonne
+    # Mappatura semantica delle colonne anagrafiche
     col_map = {}
     for col in df.columns:
         c_lower = col.lower()
@@ -68,19 +67,12 @@ def load_data():
     if 'Sede' not in df.columns:
         df['Sede'] = 'N/D'
 
-    # Inizializzazione colonne standard mancanti
-    colonne_standard = [
-        'Stato Workflow', 'Report Audit Completo', 'Note Audit Digitale', 'Score Opportunità (%)',
-        'Chk_Https', 'Chk_Title', 'Chk_Desc', 'Chk_H1', 'Chk_Sitemap', 'Chk_Robots',
-        'Chk_Nav', 'Chk_Cta', 'Chk_Form', 'Chk_Pop', 'Chk_Eeat', 'Chk_Faq', 'Chk_Nap',
-        'Chk_Piva', 'Chk_Gdpr', 'Chk_Cookie'
-    ]
-    for col in colonne_standard:
+    # Inizializzazione colonne mancanti (workflow, report, note, score e tutte le checkbox)
+    for col in default_columns:
         if col not in df.columns:
             df[col] = False if col.startswith('Chk_') else ''
             
     # --- FIX DEFINITIVO TYPEERROR ---
-    # Forza le colonne testuali a essere trattate come 'object' per accettare stringhe lunghe
     colonne_testo = ['Ragione Sociale', 'Sito Web', 'Sede', 'Stato Workflow', 'Report Audit Completo', 'Note Audit Digitale']
     for col in colonne_testo:
         if col in df.columns:
@@ -234,53 +226,80 @@ with tab_scheda:
 
         with tab_validazione:
             st.write("#### ⚙️ 1. SEO Tecnica")
-            c1, c2, c3 = st.columns(3)
-            chk_https = c1.checkbox("HTTPS / SSL", value=bool(lead_info.get('Chk_Https', False)))
-            chk_title = c1.checkbox("Tag Title", value=bool(lead_info.get('Chk_Title', False)))
-            chk_desc = c2.checkbox("Meta Description", value=bool(lead_info.get('Chk_Desc', False)))
-            chk_h1 = c2.checkbox("Tag H1", value=bool(lead_info.get('Chk_H1', False)))
-            chk_sitemap = c3.checkbox("Sitemap.xml", value=bool(lead_info.get('Chk_Sitemap', False)))
-            chk_robots = c3.checkbox("Robots.txt", value=bool(lead_info.get('Chk_Robots', False)))
+            chk_https = st.checkbox("Mancanza HTTPS / SSL sicuro", value=bool(lead_info.get('Chk_Https', False)))
+            chk_http403 = st.checkbox("Errore HTTP 403 / Blocco Bot", value=bool(lead_info.get('Chk_Http403', False)))
+            chk_title = st.checkbox("Assenza o errore nel Tag Title", value=bool(lead_info.get('Chk_Title', False)))
+            chk_desc = st.checkbox("Assenza Meta Description", value=bool(lead_info.get('Chk_Desc', False)))
+            chk_h1 = st.checkbox("Assenza Tag H1 principale", value=bool(lead_info.get('Chk_H1', False)))
+            chk_sitemap = st.checkbox("Assenza Sitemap.XML", value=bool(lead_info.get('Chk_Sitemap', False)))
+            chk_robots = st.checkbox("Assenza o errata configurazione di Robots.txt", value=bool(lead_info.get('Chk_Robots', False)))
+            chk_lat = st.checkbox("Tempi di risposta del server elevati (Latenza)", value=bool(lead_info.get('Chk_Lat', False)))
+            chk_mobile = st.checkbox("Mobile non corretto / Responsive carente", value=bool(lead_info.get('Chk_Mobile', False)))
+            chk_hreflang = st.checkbox("Hreflang non corretto (per siti multilingua)", value=bool(lead_info.get('Chk_Hreflang', False)))
             
-            st.write("#### 🎨 2. UX / UI")
-            u1, u2 = st.columns(2)
-            chk_nav = u1.checkbox("Navigazione", value=bool(lead_info.get('Chk_Nav', False)))
-            chk_cta = u1.checkbox("CTA", value=bool(lead_info.get('Chk_Cta', False)))
-            chk_form = u2.checkbox("Form Contatti", value=bool(lead_info.get('Chk_Form', False)))
-            chk_pop = u2.checkbox("Popup Invasivi", value=bool(lead_info.get('Chk_Pop', False)))
+            st.write("#### 🎨 2. UX / UI (User Experience & Interface)")
+            chk_nav = st.checkbox("Navigazione non chiara o complessa", value=bool(lead_info.get('Chk_Nav', False)))
+            chk_cta = st.checkbox("Call to Action (CTA) non visibili o non coerenti", value=bool(lead_info.get('Chk_Cta', False)))
+            chk_form = st.checkbox("Form di contatto non brevi / macchinosi", value=bool(lead_info.get('Chk_Form', False)))
+            chk_pop = st.checkbox("Presenza di elementi invasivi (popup aggressivi e simili)", value=bool(lead_info.get('Chk_Pop', False)))
+            chk_brand = st.checkbox("Non coerenza visiva e di brand", value=bool(lead_info.get('Chk_Brand', False)))
+            chk_bread = st.checkbox("Assenza di breadcrumbs (briciole di pane per la navigazione)", value=bool(lead_info.get('Chk_Bread', False)))
+            chk_trust = st.checkbox("[Nuovo suggerito] Mancanza di elementi di fiducia visibili (es. loghi clienti, certificazioni o contatti in evidenza nell'header)", value=bool(lead_info.get('Chk_Trust', False)))
 
-            st.write("#### ✍️ 3. Contenuti e GEO")
-            g1, g2 = st.columns(2)
-            chk_eeat = g1.checkbox("Contenuti EEAT", value=bool(lead_info.get('Chk_Eeat', False)))
-            chk_faq = g1.checkbox("Sezione FAQ", value=bool(lead_info.get('Chk_Faq', False)))
-            chk_nap = g2.checkbox("Coerenza NAP", value=bool(lead_info.get('Chk_Nap', False)))
+            st.write("#### ✍️ 3. Contenuti e GEO (Local SEO & E-E-A-T)")
+            chk_eeat = st.checkbox("Assenza di contenuti originali e segnali E-E-A-T (Competenza, Autorevolezza, Affidabilità)", value=bool(lead_info.get('Chk_Eeat', False)))
+            chk_faq = st.checkbox("Assenza di sezione FAQ (Domande Frequenti)", value=bool(lead_info.get('Chk_Faq', False)))
+            chk_blog = st.checkbox("Assenza di sezione Blog / News / Aggiornamenti", value=bool(lead_info.get('Chk_Blog', False)))
+            chk_nap = st.checkbox("Non coerenza NAP (Name, Address, Phone) tra sito e dati societari/Google Business Profile", value=bool(lead_info.get('Chk_Nap', False)))
+            chk_social = st.checkbox("[Nuovo suggerito] Assenza di link diretti a Social Network o schede Google Business Profile verificate", value=bool(lead_info.get('Chk_Social', False)))
 
-            st.write("#### ⚖️ 4. Legali e Amministrativi")
-            l1, l2 = st.columns(2)
-            chk_piva = l1.checkbox("Partita IVA", value=bool(lead_info.get('Chk_Piva', False)))
-            chk_gdpr = l1.checkbox("GDPR", value=bool(lead_info.get('Chk_Gdpr', False)))
-            chk_cookie = l2.checkbox("Cookie Banner", value=bool(lead_info.get('Chk_Cookie', False)))
+            st.write("#### ⚖️ 4. Legali e Amministrativi (Compliance & GDPR)")
+            chk_piva = st.checkbox("Assenza Partita IVA / Dati societari in chiaro in Home Page (o nel footer)", value=bool(lead_info.get('Chk_Piva', False)))
+            chk_gdpr = st.checkbox("Assenza GDPR / Privacy Policy adeguata", value=bool(lead_info.get('Chk_Gdpr', False)))
+            chk_cookie = st.checkbox("Assenza Cookie Law / Gestione policy dei cookie", value=bool(lead_info.get('Chk_Cookie', False)))
+            chk_banner = st.checkbox("Assenza Cookie Banner conforme (es. blocco preventivo dei tracker)", value=bool(lead_info.get('Chk_Banner', False)))
+            chk_srl = st.checkbox("Assenza Informativa specifica per SRL / SPA (es. indicazione Registro Imprese, Capitale Sociale, ecc.)", value=bool(lead_info.get('Chk_Srl', False)))
+            chk_pec = st.checkbox("[Nuovo suggerito] Assenza di collegamenti alla PEC / SDI nei contatti o footer (obbligatorio/utile per il B2B italiano)", value=bool(lead_info.get('Chk_Pec', False)))
 
             if st.button("💾 Salva Validazione e Calcola Score"):
                 df_lead.loc[idx_row, 'Chk_Https'] = bool(chk_https)
+                df_lead.loc[idx_row, 'Chk_Http403'] = bool(chk_http403)
                 df_lead.loc[idx_row, 'Chk_Title'] = bool(chk_title)
                 df_lead.loc[idx_row, 'Chk_Desc'] = bool(chk_desc)
                 df_lead.loc[idx_row, 'Chk_H1'] = bool(chk_h1)
                 df_lead.loc[idx_row, 'Chk_Sitemap'] = bool(chk_sitemap)
                 df_lead.loc[idx_row, 'Chk_Robots'] = bool(chk_robots)
+                df_lead.loc[idx_row, 'Chk_Lat'] = bool(chk_lat)
+                df_lead.loc[idx_row, 'Chk_Mobile'] = bool(chk_mobile)
+                df_lead.loc[idx_row, 'Chk_Hreflang'] = bool(chk_hreflang)
                 df_lead.loc[idx_row, 'Chk_Nav'] = bool(chk_nav)
                 df_lead.loc[idx_row, 'Chk_Cta'] = bool(chk_cta)
                 df_lead.loc[idx_row, 'Chk_Form'] = bool(chk_form)
                 df_lead.loc[idx_row, 'Chk_Pop'] = bool(chk_pop)
+                df_lead.loc[idx_row, 'Chk_Brand'] = bool(chk_brand)
+                df_lead.loc[idx_row, 'Chk_Bread'] = bool(chk_bread)
+                df_lead.loc[idx_row, 'Chk_Trust'] = bool(chk_trust)
                 df_lead.loc[idx_row, 'Chk_Eeat'] = bool(chk_eeat)
                 df_lead.loc[idx_row, 'Chk_Faq'] = bool(chk_faq)
+                df_lead.loc[idx_row, 'Chk_Blog'] = bool(chk_blog)
                 df_lead.loc[idx_row, 'Chk_Nap'] = bool(chk_nap)
+                df_lead.loc[idx_row, 'Chk_Social'] = bool(chk_social)
                 df_lead.loc[idx_row, 'Chk_Piva'] = bool(chk_piva)
                 df_lead.loc[idx_row, 'Chk_Gdpr'] = bool(chk_gdpr)
                 df_lead.loc[idx_row, 'Chk_Cookie'] = bool(chk_cookie)
+                df_lead.loc[idx_row, 'Chk_Banner'] = bool(chk_banner)
+                df_lead.loc[idx_row, 'Chk_Srl'] = bool(chk_srl)
+                df_lead.loc[idx_row, 'Chk_Pec'] = bool(chk_pec)
                 
-                tot_check = sum([chk_https, chk_title, chk_desc, chk_h1, chk_sitemap, chk_robots, chk_nav, chk_cta, chk_form, chk_pop, chk_eeat, chk_faq, chk_nap, chk_piva, chk_gdpr, chk_cookie])
-                score_calc = round((tot_check / 16) * 100)
+                lista_valori_chk = [
+                    chk_https, chk_http403, chk_title, chk_desc, chk_h1, 
+                    chk_sitemap, chk_robots, chk_lat, chk_mobile, chk_hreflang,
+                    chk_nav, chk_cta, chk_form, chk_pop, chk_brand, chk_bread, chk_trust,
+                    chk_eeat, chk_faq, chk_blog, chk_nap, chk_social,
+                    chk_piva, chk_gdpr, chk_cookie, chk_banner, chk_srl, chk_pec
+                ]
+                tot_check = sum(lista_valori_chk)
+                score_calc = round((tot_check / len(lista_valori_chk)) * 100)
                 df_lead.loc[idx_row, 'Score Opportunità (%)'] = int(score_calc)
                 
                 save_data(df_lead)
@@ -289,25 +308,20 @@ with tab_scheda:
         with tab_report:
             st.write("#### 📄 Report e Sintesi Audit")
             
-            # --- UPLOADER FILE ---
             uploaded_file = st.file_uploader("📎 Carica file Audit (formati ammessi: TXT, MD):", type=["txt", "md"])
             
             testo_base = str(lead_info.get('Report Audit Completo', ''))
-            # Pulizia preventiva in caso di campi vuoti
             if testo_base.lower() == 'nan':
                 testo_base = ''
             
-            # Se viene caricato un file, appendiamo il suo contenuto al testo esistente
             if uploaded_file is not None:
                 string_data = uploaded_file.getvalue().decode("utf-8")
                 st.info("File letto correttamente. Il contenuto è visibile qui sotto pronto per essere salvato.")
-                # Unisce il testo già presente con il nuovo caricato
                 testo_base = f"{testo_base}\n\n--- NUOVO AUDIT CARICATO ---\n{string_data}" if testo_base.strip() else string_data
             
             audit_completo = st.text_area("Testo Report / Sintesi:", value=testo_base, height=300)
             
             if st.button("💾 Salva Report Finale"):
-                # Grazie al fix in load_data(), questo non andrà più in errore
                 df_lead.loc[idx_row, 'Report Audit Completo'] = str(audit_completo)
                 save_data(df_lead)
                 st.success("Report e allegati testuali salvati nel database!")
