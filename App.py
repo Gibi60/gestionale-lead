@@ -62,7 +62,7 @@ def load_data():
     if 'Sede' not in df.columns:
         df['Sede'] = 'N/D'
 
-    colonne_ standard = [
+    colonne_standard = [
         'Stato Workflow', 'Report Audit Completo', 'Note Audit Digitale', 'Score Opportunità (%)',
         'Chk_Https', 'Chk_Title', 'Chk_Desc', 'Chk_H1', 'Chk_Sitemap', 'Chk_Robots',
         'Chk_Nav', 'Chk_Cta', 'Chk_Form', 'Chk_Pop', 'Chk_Eeat', 'Chk_Faq', 'Chk_Nap',
