@@ -261,7 +261,6 @@ with tab_scheda:
                 df_lead.at[idx_row, 'Chk_Gdpr'] = chk_gdpr
                 df_lead.at[idx_row, 'Chk_Cookie'] = chk_cookie
                 
-                # Calcolo automatico dello score basato sui check spuntati su 15 totali
                 tot_check = sum([chk_https, chk_title, chk_desc, chk_h1, chk_sitemap, chk_robots, chk_nav, chk_cta, chk_form, chk_pop, chk_eeat, chk_faq, chk_nap, chk_piva, chk_gdpr, chk_cookie])
                 score_calc = round((tot_check / 16) * 100)
                 df_lead.at[idx_row, 'Score Opportunità (%)'] = score_calc
@@ -273,10 +272,10 @@ with tab_scheda:
             st.write("#### 📄 Report e Allegato Audit")
             audit_completo = st.text_area("Testo Report / Sintesi:", value=str(lead_info.get('Report Audit Completo', '')), height=200)
             
-            uploaded_file = st.file_uploader("📎 Allega documento di Audit (PDF, DOCX, TXT):", type=["pdf", "docx", "txt", "png", "jpg"])
+            uploaded_file = st.file_uploader("📎 Allega documento di Audit (solo TXT o MD):", type=["txt", "md"])
             if uploaded_file is not None:
-                os.makedirs("audit_ allegati", exist_ok=True)
-                file_path = os.path.join("audit_ allegati", uploaded_file.name)
+                os.makedirs("audit_allegati", exist_ok=True)
+                file_path = os.path.join("audit_allegati", uploaded_file.name)
                 with open(file_path, "wb") as f:
                     f.write(uploaded_file.getbuffer())
                 st.success(f"File allegato salvato con successo: {uploaded_file.name}")
