@@ -219,10 +219,12 @@ with tab_scheda:
 
     st.markdown("---")
 
-    # --- SEZIONE CHECKLIST INTERATTIVA CRITICITÀ & RATING ---
-    st.subheader("✅ Validazione Rapida Criticità SEO & Score Opportunità Lead")
-    st.write("Seleziona gli elementi critici emersi dall'analisi per calcolare l'indice di opportunità commerciale:")
+    # --- CHECKLIST STRUTTURATA A 4 BLOCCHI ---
+    st.subheader("✅ Validazione Criticità SEO & Score Opportunità Lead")
+    st.write("Seleziona gli elementi critici emersi dall'analisi suddivisi per area di competenza:")
 
+    # BLOCCO 1: SEO TECNICA
+    st.markdown("#### ⚙️ 1. SEO Tecnica")
     c1, c2, c3 = st.columns(3)
     with c1:
         chk_https = st.checkbox("Mancanza HTTPS / SSL sicuro", key=f"chk_https_{azienda_selezionata}")
@@ -230,18 +232,63 @@ with tab_scheda:
         chk_title = st.checkbox("Assenza o Errore Tag Title", key=f"chk_title_{azienda_selezionata}")
     with c2:
         chk_desc = st.checkbox("Assenza Meta Description", key=f"chk_desc_{azienda_selezionata}")
-        chk_h1 = st.checkbox("Assenza Tag H1 Principale", key=f"chk_h1_{azienda_selezionata}")
-        chk_robots = st.checkbox("Assenza Robots.txt ottimizzato", key=f"chk_robots_{azienda_selezionata}")
-    with c3:
+        chk_h1 = st.checkbox("Assenza Tag H1 principale", key=f"chk_h1_{azienda_selezionata}")
         chk_sitemap = st.checkbox("Assenza Sitemap.XML", key=f"chk_sitemap_{azienda_selezionata}")
-        chk_speed = st.checkbox("Lentezza di Caricamento", key=f"chk_speed_{azienda_selezionata}")
-        chk_mobile = st.checkbox("Problemi UX / Mobile non ottimizzato", key=f"chk_mobile_{azienda_selezionata}")
-        chk_eeat = st.checkbox("Carenza Segnali E-E-A-T / Contenuti", key=f"chk_eeat_{azienda_selezionata}")
+    with c3:
+        chk_robots = st.checkbox("Assenza / errato Robots.txt", key=f"chk_robots_{azienda_selezionata}")
+        chk_speed = st.checkbox("Tempi alti risposta server", key=f"chk_speed_{azienda_selezionata}")
+        chk_mobile = st.checkbox("Mobile non corretto", key=f"chk_mobile_{azienda_selezionata}")
+        chk_hreflang = st.checkbox("Hreflang non corretto", key=f"chk_hreflang_{azienda_selezionata}")
 
-    elementi_totali = 10
+    st.markdown("---")
+
+    # BLOCCO 2: UX / UI
+    st.markdown("#### 🎨 2. UX / UI (User Experience & Interface)")
+    u1, u2, u3 = st.columns(3)
+    with u1:
+        chk_nav = st.checkbox("Navigazione non chiara", key=f"chk_nav_{azienda_selezionata}")
+        chk_cta = st.checkbox("CTA non visibili o coerenti", key=f"chk_cta_{azienda_selezionata}")
+    with u2:
+        chk_form = st.checkbox("Form di contatto non brevi", key=f"chk_form_{azienda_selezionata}")
+        chk_pop = st.checkbox("Elementi invasivi (popup)", key=f"chk_pop_{azienda_selezionata}")
+    with u3:
+        chk_brand = st.checkbox("Non coerenza visiva", key=f"chk_brand_{azienda_selezionata}")
+        chk_bread = st.checkbox("Assenza breadcrumbs", key=f"chk_bread_{azienda_selezionata}")
+
+    st.markdown("---")
+
+    # BLOCCO 3: CONTENUTI E GEO
+    st.markdown("#### ✍️ 3. Contenuti e GEO (Local SEO & E-E-A-T)")
+    g1, g2, g3 = st.columns(3)
+    with g1:
+        chk_eeat = st.checkbox("Assenza contenuti originali EEAT", key=f"chk_eeat_{azienda_selezionata}")
+    with g2:
+        chk_faq = st.checkbox("Assenza sezione FAQ", key=f"chk_faq_{azienda_selezionata}")
+        chk_blog = st.checkbox("Assenza Blog / News", key=f"chk_blog_{azienda_selezionata}")
+    with g3:
+        chk_nap = st.checkbox("Non coerenza NAP", key=f"chk_nap_{azienda_selezionata}")
+
+    st.markdown("---")
+
+    # BLOCCO 4: LEGALI E AMMINISTRATIVI
+    st.markdown("#### ⚖️ 4. Legali e Amministrativi (Compliance)")
+    l1, l2, l3 = st.columns(3)
+    with l1:
+        chk_piva = st.checkbox("Assenza Partita IVA in Home", key=f"chk_piva_{azienda_selezionata}")
+        chk_gdpr = st.checkbox("Assenza GDPR Privacy", key=f"chk_gdpr_{azienda_selezionata}")
+    with l2:
+        chk_cookielaw = st.checkbox("Assenza Cookie Law", key=f"chk_cookielaw_{azienda_selezionata}")
+        chk_banner = st.checkbox("Assenza Cookie Banner conforme", key=f"chk_banner_{azienda_selezionata}")
+    with l3:
+        chk_srl = st.checkbox("Assenza Informativa per SRL / SPA", key=f"chk_srl_{azienda_selezionata}")
+
+    # Calcolo totale e score percentuale su 23 elementi totali
+    elementi_totali = 23
     elementi_critici = sum([
-        chk_https, chk_403, chk_title, chk_desc, chk_h1, 
-        chk_robots, chk_sitemap, chk_speed, chk_mobile, chk_eeat
+        chk_https, chk_403, chk_title, chk_desc, chk_h1, chk_sitemap, chk_robots, chk_speed, chk_mobile, chk_hreflang,
+        chk_nav, chk_cta, chk_form, chk_pop, chk_brand, chk_bread,
+        chk_eeat, chk_faq, chk_blog, chk_nap,
+        chk_piva, chk_gdpr, chk_cookielaw, chk_banner, chk_srl
     ])
     
     score_opportunita = int((elementi_critici / elementi_totali) * 100)
@@ -252,14 +299,14 @@ with tab_scheda:
     st.markdown("---")
     col_score1, col_score2 = st.columns([1, 3])
     with col_score1:
-        st.metric(label="🎯 Potenziale di Contatto", value=f"{score_opportunita}%", delta=f"{elementi_critici}/10 Criticità")
+        st.metric(label="🎯 Potenziale di Contatto", value=f"{score_opportunita}%", delta=f"{elementi_critici}/23 Criticità")
     with col_score2:
-        if score_opportunita >= 70:
-            st.error("🔥 **Alta Priorità di Contatto**: Il sito presenta gravi lacune digitali. Ottimo margine per proporre un intervento correttivo immediato.")
-        elif score_opportunita >= 40:
-            st.warning("⚠️ **Media Priorità**: Presenta diverse aree di miglioramento SEO e strategico.")
+        if score_opportunita >= 50:
+            st.error("🔥 **Alta Priorità di Contatto**: Il sito presenta importanti lacune digitali. Ottimo margine per proporre un intervento correttivo immediato.")
+        elif score_opportunita >= 25:
+            st.warning("⚠️ **Media Priorità**: Presenta diverse aree di miglioramento strategico e tecnico.")
         else:
-            st.success("✅ **Bassa Priorità / Ottimo stato**: Il sito ha già una buona base tecnica impostata.")
+            st.success("✅ **Bassa Priorità / Ottimo stato**: Il sito ha una buona conformità generale.")
 
     st.markdown("---")
 
@@ -281,16 +328,35 @@ with tab_scheda:
             stato_wf = st.selectbox("Stato Avanzamento Workflow:", stati_possibili, index=idx)
         
         critiche_attive = []
+        # Area Tecnica
         if chk_https: critiche_attive.append("- Mancanza di un protocollo HTTPS/SSL sicuro.")
         if chk_403: critiche_attive.append("- Presenza di restrizioni o errori HTTP (es. 403) che bloccano l'indicizzazione.")
-        if chk_title: critiche_attive.append("- Tag Title assente o non ottimizzato per le keyword di settore.")
-        if chk_desc: critiche_attive.append("- Assenza di Meta Description, penalizzando i CTR sui motori di ricerca.")
-        if chk_h1: critiche_attive.append("- Assenza della gerarchia corretta con tag H1 principale.")
-        if chk_robots: critiche_attive.append("- File Robots.txt assente o non configurato correttamente.")
-        if chk_sitemap: critiche_attive.append("- Sitemap XML non rilevata o non ottimizzata.")
-        if chk_speed: critiche_attive.append("- Tempi di risposta del server elevati (impatto negativo su Core Web Vitals).")
-        if chk_mobile: critiche_attive.append("- Ottimizzazione mobile e UX migliorabile.")
-        if chk_eeat: critiche_attive.append("- Carenza di segnali E-E-A-T (autorevolezza, contatti chiari, portfolio).")
+        if chk_title: critiche_attive.append("- Tag Title assente o non ottimizzato.")
+        if chk_desc: critiche_attive.append("- Assenza di Meta Description.")
+        if chk_h1: critiche_attive.append("- Assenza della gerarchia con tag H1 principale.")
+        if chk_sitemap: critiche_attive.append("- Sitemap XML non rilevata.")
+        if chk_robots: critiche_attive.append("- File Robots.txt assente o errato.")
+        if chk_speed: critiche_attive.append("- Tempi di risposta del server elevati.")
+        if chk_mobile: critiche_attive.append("- Ottimizzazione mobile non corretta.")
+        if chk_hreflang: critiche_attive.append("- Tag Hreflang non corretti o mancanti.")
+        # Area UX/UI
+        if chk_nav: critiche_attive.append("- Navigazione del sito non chiara.")
+        if chk_cta: critiche_attive.append("- Call to Action (CTA) non visibili o coerenti.")
+        if chk_form: critiche_attive.append("- Form di contatto troppo lunghi o macchinosi.")
+        if chk_pop: critiche_attive.append("- Presenza di elementi invasivi (popup aggressivi).")
+        if chk_brand: critiche_attive.append("- Non coerenza visiva e di brand.")
+        if chk_bread: critiche_attive.append("- Assenza di breadcrumbs di navigazione.")
+        # Area Contenuti & GEO
+        if chk_eeat: critiche_attive.append("- Assenza di contenuti originali e segnali E-E-A-T.")
+        if chk_faq: critiche_attive.append("- Assenza di una sezione FAQ.")
+        if chk_blog: critiche_attive.append("- Assenza di una sezione Blog o News.")
+        if chk_nap: critiche_attive.append("- Non coerenza NAP (Nome, Indirizzo, Telefono).")
+        # Area Legale & Amministrativa
+        if chk_piva: critiche_attive.append("- Assenza Partita IVA / Dati societari in chiaro.")
+        if chk_gdpr: critiche_attive.append("- Assenza o inadeguatezza della GDPR Privacy Policy.")
+        if chk_cookielaw: critiche_attive.append("- Assenza conformità Cookie Law.")
+        if chk_banner: critiche_attive.append("- Assenza di un Cookie Banner conforme (blocco preventivo).")
+        if chk_srl: critiche_attive.append("- Assenza informative societarie obbligatorie per SRL/SPA.")
 
         testo_critiche_automatico = "\n".join(critiche_attive) if critiche_attive else "Nessuna criticità di base rilevata."
 
@@ -353,7 +419,7 @@ Analizzando la presenza digitale del Vostro sito ({sito_url}), abbiamo riscontra
 
 Questo divario digitale potrebbe limitare le Vostre opportunità commerciali sui motori di ricerca rispetto ai vostri competitor.
 
-Abbiamo elaborato un audit preliminare di posizionamento SEO e visibilità B2B specifica per il Vostro settore.
+Abbiamo elaborato un audit preliminare di posizionamento SEO, conformità e visibilità B2B specifica per il Vostro settore.
 """
 
     st.text_area("Copia Testo Mail:", value=pitch_mail, height=180)
