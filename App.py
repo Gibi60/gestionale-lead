@@ -26,11 +26,14 @@ def load_data():
         return df
     
     try:
+        # Tenta la lettura automatica del separatore
         df = pd.read_csv(FILE_CSV, sep=None, engine='python', on_bad_lines='skip')
     except Exception:
         try:
+            # Fallback forzato sul punto e virgola
             df = pd.read_csv(FILE_CSV, sep=';', on_bad_lines='skip')
         except Exception:
+            # Fallback estremo se il file è corrotto
             df = pd.DataFrame(columns=[
                 'Ragione Sociale', 'Sito Web', 'Sede', 'Stato Workflow', 
                 'Report Audit Completo', 'Note Audit Digitale', 'Score Opportunità (%)',
@@ -41,8 +44,10 @@ def load_data():
             df.to_csv(FILE_CSV, index=False)
             return df
 
+    # Pulizia nomi colonne
     df.columns = [str(col).strip() for col in df.columns]
 
+    # Mappatura semantica delle colonne
     col_map = {}
     for col in df.columns:
         c_lower = col.lower()
@@ -55,6 +60,7 @@ def load_data():
             
     df = df.rename(columns=col_map)
 
+    # Assicuriamo la presenza delle colonne chiave
     if 'Ragione Sociale' not in df.columns:
         df['Ragione Sociale'] = df.iloc[:, 0]
     if 'Sito Web' not in df.columns:
@@ -62,6 +68,7 @@ def load_data():
     if 'Sede' not in df.columns:
         df['Sede'] = 'N/D'
 
+    # Inizializzazione colonne standard mancanti
     colonne_standard = [
         'Stato Workflow', 'Report Audit Completo', 'Note Audit Digitale', 'Score Opportunità (%)',
         'Chk_Https', 'Chk_Title', 'Chk_Desc', 'Chk_H1', 'Chk_Sitemap', 'Chk_Robots',
@@ -270,12 +277,25 @@ with tab_scheda:
 
         with tab_report:
             st.write("#### 📄 Report e Sintesi Audit")
-            audit_completo = st.text_area("Testo Report / Sintesi:", value=str(lead_info.get('Report Audit Completo', '')), height=250)
             
-            if st.button("💾 Salva Report"):
+            # --- UPLOADER FILE RIPRISTINATO ---
+            uploaded_file = st.file_uploader("📎 Carica file Audit (formati ammessi: TXT, MD):", type=["txt", "md"])
+            
+            testo_base = str(lead_info.get('Report Audit Completo', ''))
+            
+            # Se viene caricato un file, appendiamo il suo contenuto al testo esistente
+            if uploaded_file is not None:
+                string_data = uploaded_file.getvalue().decode("utf-8")
+                st.info("File letto correttamente. Il contenuto è visibile qui sotto pronto per essere salvato.")
+                # Unisce il testo già presente con il nuovo caricato
+                testo_base = f"{testo_base}\n\n--- NUOVO AUDIT CARICATO ---\n{string_data}" if testo_base.strip() else string_data
+            
+            audit_completo = st.text_area("Testo Report / Sintesi:", value=testo_base, height=300)
+            
+            if st.button("💾 Salva Report Finale"):
                 df_lead.at[idx_row, 'Report Audit Completo'] = str(audit_completo)
                 save_data(df_lead)
-                st.success("Report salvato nel database!")
+                st.success("Report e allegati testuali salvati nel database!")
                 
         with tab_prompt:
             st.code(f"Agisci come consulente SEO ed esperto di digital marketing per l'azienda {lead_info['Ragione Sociale']} con sito {sito_url}. Analizza le criticità rilevate e prepara una strategia mirata alla lead generation.")
