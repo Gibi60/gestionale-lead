@@ -10,7 +10,7 @@ import os
 # --- CONFIGURAZIONE PAGINA ---
 st.set_page_config(page_title="Gestionale Lead & Web Audit V2", layout="wide", page_icon="🚀")
 
-# --- GESTIONE DATI PERSISTENTI (ROBUSTA) ---
+# --- GESTIONE DATI PERSISTENTI & MAPPATURA INTESTAZIONI ---
 FILE_CSV = "Gestione_Lead_Locale.csv"
 
 def load_data():
@@ -19,23 +19,41 @@ def load_data():
         df.to_csv(FILE_CSV, index=False)
         return df
     
-    # Prova a leggere il file gestendo automaticamente i separatori e gli errori di formattazione
     try:
         df = pd.read_csv(FILE_CSV, sep=None, engine='python', on_bad_lines='skip')
     except Exception:
         try:
             df = pd.read_csv(FILE_CSV, sep=';', on_bad_lines='skip')
         except Exception:
-            # Se il file è totalmente illeggibile, ne ricrea uno pulito per evitare il crash
             df = pd.DataFrame(columns=['Ragione Sociale', 'Sito Web', 'Sede', 'Stato Workflow', 'Report Audit Completo', 'Note Audit Digitale', 'Score Opportunità (%)'])
             df.to_csv(FILE_CSV, index=False)
-            
-    # Pulisce i nomi delle colonne da spazi superflui
+            return df
+
+    # Pulisce gli spazi nei nomi delle colonne
     df.columns = [str(col).strip() for col in df.columns]
-    
-    # Assicura la presenza di tutte le colonne necessarie
-    colonne_necessarie = ['Ragione Sociale', 'Sito Web', 'Sede', 'Stato Workflow', 'Report Audit Completo', 'Note Audit Digitale', 'Score Opportunità (%)']
-    for col in colonne_necessarie:
+
+    # Mappa le intestazioni differenti per evitare che saltino i campi
+    col_map = {}
+    for col in df.columns:
+        c_lower = col.lower()
+        if c_lower in ['azienda', 'ragione sociale', 'ragionesociale', 'nome', 'company']:
+            col_map[col] = 'Ragione Sociale'
+        elif c_lower in ['web', 'sito', 'sito web', 'sitoweb', 'url', 'website', 'link', 'dominio']:
+            col_map[col] = 'Sito Web'
+        elif c_lower in ['sede', 'città', 'citta', 'location']:
+            col_map[col] = 'Sede'
+            
+    df = df.rename(columns=col_map)
+
+    # Verifica e forza la presenza delle colonne essenziali
+    if 'Ragione Sociale' not in df.columns:
+        df['Ragione Sociale'] = df.iloc[:, 0]
+    if 'Sito Web' not in df.columns:
+        df['Sito Web'] = 'N/D'
+    if 'Sede' not in df.columns:
+        df['Sede'] = 'N/D'
+
+    for col in ['Stato Workflow', 'Report Audit Completo', 'Note Audit Digitale', 'Score Opportunità (%)']:
         if col not in df.columns:
             df[col] = ''
             
@@ -85,7 +103,7 @@ with tab_panoramica:
 
 with tab_scheda:
     if df_lead.empty:
-        st.warning("Il database è vuoto. Carica o inserisci dei dati.")
+        st.warning("Il database è vuoto.")
     else:
         elenco_aziende = df_lead['Ragione Sociale'].dropna().unique().tolist()
         azienda_selezionata = st.selectbox("🎯 Seleziona Azienda:", elenco_aziende, key="sel_az")
