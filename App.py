@@ -79,6 +79,13 @@ def load_data():
         if col not in df.columns:
             df[col] = False if col.startswith('Chk_') else ''
             
+    # --- FIX DEFINITIVO TYPEERROR ---
+    # Forza le colonne testuali a essere trattate come 'object' per accettare stringhe lunghe
+    colonne_testo = ['Ragione Sociale', 'Sito Web', 'Sede', 'Stato Workflow', 'Report Audit Completo', 'Note Audit Digitale']
+    for col in colonne_testo:
+        if col in df.columns:
+            df[col] = df[col].astype('object')
+            
     return df
 
 def save_data(df):
@@ -213,7 +220,11 @@ with tab_scheda:
             idx_stato = stati_possibili.index(stato_corrente) if stato_corrente in stati_possibili else 0
             
             stato_wf = st.selectbox("Stato Workflow:", stati_possibili, index=idx_stato)
-            note_sintesi = st.text_area("Note SEO:", value=str(lead_info.get('Note Audit Digitale', '')), height=150)
+            
+            note_attuali = str(lead_info.get('Note Audit Digitale', ''))
+            if note_attuali.lower() == 'nan':
+                note_attuali = ''
+            note_sintesi = st.text_area("Note SEO:", value=note_attuali, height=150)
             
             if st.button("💾 Salva Note & Stato"):
                 df_lead.loc[idx_row, 'Note Audit Digitale'] = str(note_sintesi)
@@ -282,7 +293,7 @@ with tab_scheda:
             uploaded_file = st.file_uploader("📎 Carica file Audit (formati ammessi: TXT, MD):", type=["txt", "md"])
             
             testo_base = str(lead_info.get('Report Audit Completo', ''))
-            # Pulizia preventiva in caso di campi vuoti riconosciuti come 'nan' da pandas
+            # Pulizia preventiva in caso di campi vuoti
             if testo_base.lower() == 'nan':
                 testo_base = ''
             
@@ -296,7 +307,7 @@ with tab_scheda:
             audit_completo = st.text_area("Testo Report / Sintesi:", value=testo_base, height=300)
             
             if st.button("💾 Salva Report Finale"):
-                # Utilizziamo loc per evitare TypeError in fase di inserimento testo
+                # Grazie al fix in load_data(), questo non andrà più in errore
                 df_lead.loc[idx_row, 'Report Audit Completo'] = str(audit_completo)
                 save_data(df_lead)
                 st.success("Report e allegati testuali salvati nel database!")
