@@ -62,7 +62,7 @@ def load_data():
     if 'Sede' not in df.columns:
         df['Sede'] = 'N/D'
 
-    colonne_standard = [
+    colonne_ standard = [
         'Stato Workflow', 'Report Audit Completo', 'Note Audit Digitale', 'Score Opportunità (%)',
         'Chk_Https', 'Chk_Title', 'Chk_Desc', 'Chk_H1', 'Chk_Sitemap', 'Chk_Robots',
         'Chk_Nav', 'Chk_Cta', 'Chk_Form', 'Chk_Pop', 'Chk_Eeat', 'Chk_Faq', 'Chk_Nap',
@@ -209,8 +209,8 @@ with tab_scheda:
             note_sintesi = st.text_area("Note SEO:", value=str(lead_info.get('Note Audit Digitale', '')), height=150)
             
             if st.button("💾 Salva Note & Stato"):
-                df_lead.at[idx_row, 'Note Audit Digitale'] = note_sintesi
-                df_lead.at[idx_row, 'Stato Workflow'] = stato_wf
+                df_lead.at[idx_row, 'Note Audit Digitale'] = str(note_sintesi)
+                df_lead.at[idx_row, 'Stato Workflow'] = str(stato_wf)
                 save_data(df_lead)
                 st.success("Dati salvati nel file CSV!")
 
@@ -244,44 +244,36 @@ with tab_scheda:
             chk_cookie = l2.checkbox("Cookie Banner", value=bool(lead_info.get('Chk_Cookie', False)))
 
             if st.button("💾 Salva Validazione e Calcola Score"):
-                df_lead.at[idx_row, 'Chk_Https'] = chk_https
-                df_lead.at[idx_row, 'Chk_Title'] = chk_title
-                df_lead.at[idx_row, 'Chk_Desc'] = chk_desc
-                df_lead.at[idx_row, 'Chk_H1'] = chk_h1
-                df_lead.at[idx_row, 'Chk_Sitemap'] = chk_sitemap
-                df_lead.at[idx_row, 'Chk_Robots'] = chk_robots
-                df_lead.at[idx_row, 'Chk_Nav'] = chk_nav
-                df_lead.at[idx_row, 'Chk_Cta'] = chk_cta
-                df_lead.at[idx_row, 'Chk_Form'] = chk_form
-                df_lead.at[idx_row, 'Chk_Pop'] = chk_pop
-                df_lead.at[idx_row, 'Chk_Eeat'] = chk_eeat
-                df_lead.at[idx_row, 'Chk_Faq'] = chk_faq
-                df_lead.at[idx_row, 'Chk_Nap'] = chk_nap
-                df_lead.at[idx_row, 'Chk_Piva'] = chk_piva
-                df_lead.at[idx_row, 'Chk_Gdpr'] = chk_gdpr
-                df_lead.at[idx_row, 'Chk_Cookie'] = chk_cookie
+                df_lead.at[idx_row, 'Chk_Https'] = bool(chk_https)
+                df_lead.at[idx_row, 'Chk_Title'] = bool(chk_title)
+                df_lead.at[idx_row, 'Chk_Desc'] = bool(chk_desc)
+                df_lead.at[idx_row, 'Chk_H1'] = bool(chk_h1)
+                df_lead.at[idx_row, 'Chk_Sitemap'] = bool(chk_sitemap)
+                df_lead.at[idx_row, 'Chk_Robots'] = bool(chk_robots)
+                df_lead.at[idx_row, 'Chk_Nav'] = bool(chk_nav)
+                df_lead.at[idx_row, 'Chk_Cta'] = bool(chk_cta)
+                df_lead.at[idx_row, 'Chk_Form'] = bool(chk_form)
+                df_lead.at[idx_row, 'Chk_Pop'] = bool(chk_pop)
+                df_lead.at[idx_row, 'Chk_Eeat'] = bool(chk_eeat)
+                df_lead.at[idx_row, 'Chk_Faq'] = bool(chk_faq)
+                df_lead.at[idx_row, 'Chk_Nap'] = bool(chk_nap)
+                df_lead.at[idx_row, 'Chk_Piva'] = bool(chk_piva)
+                df_lead.at[idx_row, 'Chk_Gdpr'] = bool(chk_gdpr)
+                df_lead.at[idx_row, 'Chk_Cookie'] = bool(chk_cookie)
                 
                 tot_check = sum([chk_https, chk_title, chk_desc, chk_h1, chk_sitemap, chk_robots, chk_nav, chk_cta, chk_form, chk_pop, chk_eeat, chk_faq, chk_nap, chk_piva, chk_gdpr, chk_cookie])
                 score_calc = round((tot_check / 16) * 100)
-                df_lead.at[idx_row, 'Score Opportunità (%)'] = score_calc
+                df_lead.at[idx_row, 'Score Opportunità (%)'] = int(score_calc)
                 
                 save_data(df_lead)
                 st.success(f"Validazione salvata con successo! Score opportunità calcolato: {score_calc}%")
 
         with tab_report:
-            st.write("#### 📄 Report e Allegato Audit")
-            audit_completo = st.text_area("Testo Report / Sintesi:", value=str(lead_info.get('Report Audit Completo', '')), height=200)
+            st.write("#### 📄 Report e Sintesi Audit")
+            audit_completo = st.text_area("Testo Report / Sintesi:", value=str(lead_info.get('Report Audit Completo', '')), height=250)
             
-            uploaded_file = st.file_uploader("📎 Allega documento di Audit (solo TXT o MD):", type=["txt", "md"])
-            if uploaded_file is not None:
-                os.makedirs("audit_allegati", exist_ok=True)
-                file_path = os.path.join("audit_allegati", uploaded_file.name)
-                with open(file_path, "wb") as f:
-                    f.write(uploaded_file.getbuffer())
-                st.success(f"File allegato salvato con successo: {uploaded_file.name}")
-
             if st.button("💾 Salva Report"):
-                df_lead.at[idx_row, 'Report Audit Completo'] = audit_completo
+                df_lead.at[idx_row, 'Report Audit Completo'] = str(audit_completo)
                 save_data(df_lead)
                 st.success("Report salvato nel database!")
                 
