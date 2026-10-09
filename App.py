@@ -1,5 +1,6 @@
 from pathlib import Path
 import os, json, html, datetime
+from urllib.parse import urlencode
 import pandas as pd
 import streamlit as st
 from lead_core import Store,DataError,STATES,OPTIONS,CHECKS,KEYS,checklist,metrics,history,now,parse_csv,encode_csv,scan,report_markdown
@@ -110,8 +111,10 @@ elif page=='Scheda lead':
     'Settore, obiettivi, pubblico, concorrenti ed e-commerce: non forniti; procedi distinguendo osservazioni e inferenze.\n'
     'Concludi con un report scaricabile da riportare nel gestionale Lead, nella sezione Report e allegati.'
    )
-   st.link_button('Apri Plugin in ChatGPT ↗','https://chatgpt.com/plugins/plugin_7c6270f298e8819197fe4de1bf1ecd6f?directoryTab=personal',type='primary')
-   st.caption('1. Copia la richiesta qui sotto con l’icona in alto a destra del riquadro. 2. Apri il Plugin e premi «Prova in chat»; in alternativa, in una nuova chat seleziona con @ Analisi Sito Web V2 – Audit Strategico. Incolla la richiesta e inviala. 3. Carica il report ottenuto in Report e allegati e salvalo nella scheda. Il testo e il report non vengono trasferiti automaticamente.')
+   chat_url='https://chatgpt.com/?'+urlencode({'q':audit_request})
+   st.link_button('Apri chat con sito e richiesta ↗',chat_url,type='primary')
+   st.link_button('Apri Plugin in ChatGPT ↗','https://chatgpt.com/plugins/plugin_7c6270f298e8819197fe4de1bf1ecd6f?directoryTab=personal')
+   st.caption('Apri la chat con sito e richiesta già compilati. Prima di inviare, seleziona con @ Analisi Sito Web V2 – Audit Strategico. Se ChatGPT non mantiene il testo, copialo dal riquadro qui sotto. Dopo l’analisi carica il report in Report e allegati e salvalo. Il Plugin non viene selezionato automaticamente e il report non viene recuperato automaticamente.')
    with st.expander('Richiesta pronta per questa azienda',expanded=True):
     st.code(audit_request,language=None)
     st.download_button('Scarica richiesta di audit',audit_request,file_name='Richiesta_audit_'+selected[:8]+'.txt',mime='text/plain',key='audit_request_'+selected)
