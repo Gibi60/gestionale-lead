@@ -112,16 +112,29 @@ elif page=='Scheda lead':
   for item in reversed(scans):
    with st.expander(item.get('date','')+' · HTTP '+str(item.get('status','—'))):render_scan(item)
  with tabs[2]:
-  a,b,c=st.columns(3);a.metric('Criticità accertate',issues);b.metric('Controlli verificati',f'{done}/{total}');c.metric('Indice criticità',f'{score}%' if score is not None else '—')
-  st.progress(done/max(total,1));st.caption('Indice = criticità / controlli verificati applicabili. Non indica probabilità di vendita. L’assenza di blog, FAQ o breadcrumbs va valutata rispetto alle esigenze del sito.')
-  with st.form('checklist_'+selected):
-   new={}
-   for group,checks in CHECKS.items():
-    with st.expander(group,expanded=group=='SEO tecnica'):
-     if group.startswith('Verifiche informative'):st.caption('Registrazione di verifiche da approfondire: non certifica conformità normativa.')
-     for key,label in checks:new[key]=st.selectbox(label,OPTIONS,index=OPTIONS.index(values[key]),key=selected+'_'+key)
-   if st.form_submit_button('Salva checklist e aggiorna indice',type='primary'):
-    count,checked,applicable,index=metrics(new);changes={'Checklist JSON':json.dumps(new,ensure_ascii=False),'Score Opportunità (%)':str(index) if index is not None else ''};changes.update({key:str(value=='Criticità') for key,value in new.items()});save(row,changes)
+  draft_key='checklist_draft_'+selected+'_'+str(row['Versione'])
+  if draft_key not in st.session_state:st.session_state[draft_key]=values.copy()
+  new=st.session_state[draft_key]
+  issues,done,total,score=metrics(new)
+  excluded=sum(v=='Non applicabile' for v in new.values())
+  a,b,c,d=st.columns(4);a.metric('Criticità accertate',issues);b.metric('Controlli verificati',f'{done}/{total}');c.metric('Non applicabili',excluded);d.metric('Indice criticità',f'{score}%' if score is not None else '—')
+  st.progress(done/max(total,1))
+  st.caption('Verificato = elemento presente e senza criticità; Non presente = criticità accertata. Le voci non applicabili sono escluse dall’indice. Le voci senza scelta restano da verificare. I contatori si aggiornano subito; premi Salva checklist per conservare le scelte.')
+  def choose_check(key,value):st.session_state[draft_key][key]=value
+  colors={'Nessuna criticità':'#17834b','Criticità':'#c73535','Non applicabile':'#68717c','Non verificato':'#8b9198'}
+  for group,checks in CHECKS.items():
+   with st.expander(group,expanded=True):
+    if group.startswith('Verifiche informative'):st.caption('Registrazione di verifiche da approfondire: non certifica conformità normativa.')
+    for key,label in checks:
+     title,green,red,neutral=st.columns([3,1.2,1.2,1.4],vertical_alignment='center')
+     current=new[key]
+     title.markdown(f'<div style="border-left:4px solid {colors[current]};padding-left:12px"><strong>{html.escape(label)}</strong><br><small style="color:{colors[current]}">{html.escape({"Nessuna criticità":"Verificato","Criticità":"Non presente"}.get(current,current))}</small></div>',unsafe_allow_html=True)
+     for col,label_button,value,color in [(green,'✓ Verificato','Nessuna criticità','#17834b'),(red,'✕ Non presente','Criticità','#c73535'),(neutral,'— Non applicabile','Non applicabile','#68717c')]:
+      button_key='ck_'+value.replace(' ','_')+'_'+selected+'_'+key
+      st.markdown(f'<style>.st-key-{button_key} button[kind="primary"]{{background:{color}!important;border-color:{color}!important;color:white!important}}</style>',unsafe_allow_html=True)
+      col.button(label_button,key=button_key,type='primary' if current==value else 'secondary',use_container_width=True,on_click=choose_check,args=(key,value))
+  if st.button('Salva checklist e aggiorna indice',type='primary',key='save_checks_'+selected):
+   count,checked,applicable,index=metrics(new);changes={'Checklist JSON':json.dumps(new,ensure_ascii=False),'Score Opportunità (%)':str(index) if index is not None else ''};changes.update({key:str(value=='Criticità') for key,value in new.items()});save(row,changes)
  with tabs[3]:
   st.caption('Carica testi o documenti: il contenuto estratto si aggiunge al report soltanto dopo il salvataggio.')
   uploaded=st.file_uploader('Allega un audit',type=['txt','md','pdf','docx'],key='audit_'+selected)
