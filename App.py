@@ -1,330 +1,173 @@
-import streamlit as st
+from pathlib import Path
+import os, json, html, datetime
 import pandas as pd
-import urllib.request
-import urllib.error
-import ssl
-import time
-import re
-import os
+import streamlit as st
+from lead_core import Store,DataError,STATES,OPTIONS,CHECKS,KEYS,checklist,metrics,history,now,parse_csv,encode_csv,scan,report_markdown
 
-# --- CONFIGURAZIONE PAGINA ---
-st.set_page_config(page_title="Gestionale Lead & Web Audit V2", layout="wide", page_icon="🚀")
+ROOT=Path(__file__).resolve().parent
+st.set_page_config(page_title='Lead & Audit · Gilberto Del Pizzo',page_icon='📋',layout='wide')
+store=Store(os.environ.get('GDP_LEAD_FILE',str(ROOT/'Gestione_Lead_Locale.csv')))
+st.markdown('''<style>
+.stApp{background:#f7f7f4;color:#202530}h1{letter-spacing:-1.4px!important}h2,h3{letter-spacing:-.5px!important}
+[data-testid="stSidebar"]{background:#fff;border-right:1px solid #e4e4df}
+[data-testid="stMetric"]{background:#fff;padding:20px 24px;border:1px solid #e5e5df;border-radius:14px}
+[data-testid="stMetricLabel"]{color:#7c8189}[data-testid="stMetricValue"]{color:#b94b1d}
+.stButton button[kind="primary"]{background:#b94b1d;border-color:#b94b1d;border-radius:8px}
+.stTabs [data-baseweb="tab-list"]{gap:20px}.stTabs [aria-selected="true"]{color:#b94b1d}
+.gdp-kicker{color:#b94b1d;letter-spacing:2px;font-size:11px;font-weight:700}.gdp-subtitle{color:#7d838b;font-size:15px;margin-bottom:28px}
+.lead-banner{padding:24px 27px;background:#fff;border:1px solid #e3e3dc;border-left:4px solid #b94b1d;border-radius:12px;margin:20px 0}
+.lead-banner h2{margin:0 0 8px}.lead-banner p{color:#737b83;margin:0}.gdp-pill{display:inline-block;background:#faeee4;color:#9b4b23;padding:4px 10px;border-radius:5px;font-size:12px;margin-left:12px}
+</style>''',unsafe_allow_html=True)
+with st.sidebar:
+ if (ROOT/'assets/logo-gdp.png').exists():st.image(str(ROOT/'assets/logo-gdp.png'),width=90)
+ st.subheader('Gilberto Del Pizzo')
+ st.caption('LEAD · AUDIT · PROSSIMI PASSI')
+ st.divider()
+ page=st.radio('Navigazione',['Panoramica','Scheda lead','Importa ed esporta','Guida'],label_visibility='collapsed')
+ st.divider()
+ st.caption('I file locali di Streamlit Cloud non garantiscono conservazione dopo riavvii o ridistribuzioni. Esporta periodicamente l’archivio completo.')
+ st.caption('Uso personale: limita l’accesso dall’amministrazione Streamlit. Il login dell’amministratore non protegge automaticamente questa app.')
+ st.caption('Versione 3.0')
+try: rows=store.read()
+except DataError as exc:
+ st.error(str(exc));st.info('Il file originale non è stato sovrascritto. Correggi il CSV o ripristina una copia verificata.');st.stop()
+if 'flash' in st.session_state:st.success(st.session_state.pop('flash'))
+st.markdown('<div class="gdp-kicker">IL TUO SPAZIO COMMERCIALE</div>',unsafe_allow_html=True)
+st.title('Lead & Audit')
+st.markdown('<div class="gdp-subtitle">Conosci le aziende. Documenta le verifiche. Scegli il prossimo passo.</div>',unsafe_allow_html=True)
 
-# --- GESTIONE DATI PERSISTENTI & MAPPATURA INTESTAZIONI ---
-FILE_CSV = "Gestione_Lead_Locale.csv"
+def save(row,changes):
+ try:store.update(row['Lead ID'],changes,row['Versione']);st.session_state['flash']='Dati salvati. La versione precedente è conservata nei backup locali.';st.rerun()
+ except DataError as exc:st.error(str(exc))
+def render_scan(result):
+ st.caption('Controllo del '+result.get('date',''))
+ if result.get('error'):st.warning(result['error'])
+ if result.get('final_url'):st.write('URL finale:',result['final_url'])
+ if result.get('status'):st.write('Risposta HTTP:',result['status'])
+ if result.get('headers_seconds') is not None:st.write('Tempo fino agli header:',str(result['headers_seconds'])+' s · non è il tempo completo di caricamento')
+ obs=result.get('observations',{})
+ if obs:
+  st.write('**Title:**',obs.get('title') or 'Non trovato nell’HTML')
+  st.write('**Description:**',obs.get('description') or 'Non trovata nell’HTML')
+  st.write('**H1:**', ' | '.join(obs.get('h1',[])) or 'Non trovato nell’HTML')
+ st.caption(result.get('limitations',''))
 
-# Elenco completo delle 27 chiavi della checklist
-CHECK_KEYS = [
-    'Chk_Https', 'Chk_Http403', 'Chk_Title', 'Chk_Desc', 'Chk_H1', 
-    'Chk_Sitemap', 'Chk_Robots', 'Chk_Lat', 'Chk_Mobile', 'Chk_Hreflang',
-    'Chk_Nav', 'Chk_Cta', 'Chk_Form', 'Chk_Pop', 'Chk_Brand', 'Chk_Bread', 'Chk_Trust',
-    'Chk_Eeat', 'Chk_Faq', 'Chk_Blog', 'Chk_Nap', 'Chk_Social',
-    'Chk_Piva', 'Chk_Gdpr', 'Chk_Cookie', 'Chk_Banner', 'Chk_Srl', 'Chk_Pec'
-]
-
-def load_data():
-    default_columns = [
-        'Ragione Sociale', 'Sito Web', 'Sede', 'Stato Workflow', 
-        'Report Audit Completo', 'Note Audit Digitale', 'Score Opportunità (%)'
-    ] + CHECK_KEYS
-
-    if not os.path.exists(FILE_CSV):
-        df = pd.DataFrame(columns=default_columns)
-        df.to_csv(FILE_CSV, index=False)
-        return df
-    
+if page=='Panoramica':
+ columns=st.columns(4)
+ columns[0].metric('Aziende',len(rows));columns[1].metric('Da analizzare',sum(r['Stato Workflow'] in ('Importato','In Analisi') for r in rows));columns[2].metric('In trattativa',sum(r['Stato Workflow']=='In Trattativa' for r in rows));columns[3].metric('Clienti acquisiti',sum(r['Stato Workflow']=='Vinto' for r in rows))
+ st.subheader('Il tuo elenco di lavoro')
+ left,middle,right=st.columns([2,1,1]);q=left.text_input('Cerca azienda, sito o sede',placeholder='Scrivi un nome o una località…');state=middle.selectbox('Stato',['Tutti']+STATES);city=right.selectbox('Sede',['Tutte']+sorted({r['Sede'] for r in rows if r['Sede']}))
+ filtered=[r for r in rows if (state=='Tutti' or r['Stato Workflow']==state) and (city=='Tutte' or r['Sede']==city) and q.casefold() in ' '.join([r['Ragione Sociale'],r['Sito Web'],r['Sede']]).casefold()]
+ columns=['Ragione Sociale','Sede','Sito Web','Stato Workflow','Prossima Azione','Scadenza','Score Opportunità (%)']
+ table=pd.DataFrame(filtered,columns=columns).rename(columns={'Score Opportunità (%)':'Indice criticità (%)'})
+ st.dataframe(table,hide_index=True,width='stretch')
+ st.caption(f'{len(filtered)} aziende visualizzate. L’indice usa soltanto i controlli verificati; i vecchi score restano provvisori fino al nuovo salvataggio della checklist.')
+ with st.expander('Aggiungi un nuovo lead'):
+  with st.form('new_lead',clear_on_submit=True):
+   company=st.text_input('Ragione sociale *');url=st.text_input('Sito web');location=st.text_input('Sede');email=st.text_input('Email');phone=st.text_input('Telefono')
+   if st.form_submit_button('Aggiungi azienda',type='primary'):
+    try:store.add({'Ragione Sociale':company,'Sito Web':url,'Sede':location,'MAIL':email,'Telefono':phone});st.session_state['flash']='Nuova azienda inserita.';st.rerun()
+    except DataError as exc:st.error(str(exc))
+elif page=='Scheda lead':
+ if not rows:st.info('Nessuna azienda. Inserisci un lead dalla Panoramica o importa un CSV.');st.stop()
+ ids=[r['Lead ID'] for r in rows];by_id={r['Lead ID']:r for r in rows}
+ selected=st.selectbox('Seleziona azienda',ids,format_func=lambda v:f'{by_id[v]["Ragione Sociale"]} · {by_id[v]["Sede"] or "Sede non indicata"} · {v[:6]}')
+ row=by_id[selected];values=checklist(row);issues,done,total,score=metrics(values)
+ st.markdown(f'<div class="lead-banner"><h2>{html.escape(row["Ragione Sociale"])}<span class="gdp-pill">{html.escape(row["Stato Workflow"])}</span></h2><p>{html.escape(row["Sede"] or "Sede non indicata")} · {html.escape(row["Sito Web"] or "Sito non indicato")}</p></div>',unsafe_allow_html=True)
+ details=st.columns(3);details[0].write('**Email:** '+row.get('MAIL',row.get('Email','')));details[1].write('**Telefono:** '+row.get('Telefono',''));details[2].write('**Prossima azione:** '+(row['Prossima Azione'] or 'Da definire'))
+ tabs=st.tabs(['Note e contatti','Audit preliminare','Checklist','Report e allegati','Anagrafica'])
+ with tabs[0]:
+  with st.form('workflow_'+selected):
+   status=st.selectbox('Stato del lead',STATES,index=STATES.index(row['Stato Workflow']));notes=st.text_area('Note e valutazione',row['Note Audit Digitale'],height=150);action=st.text_input('Prossima azione',row['Prossima Azione']);deadline=st.text_input('Scadenza (AAAA-MM-GG)',row['Scadenza'],placeholder='2026-10-20')
+   if st.form_submit_button('Salva note e prossimo passo',type='primary'):
     try:
-        df = pd.read_csv(FILE_CSV, sep=None, engine='python', on_bad_lines='skip')
-    except Exception:
-        try:
-            df = pd.read_csv(FILE_CSV, sep=';', on_bad_lines='skip')
-        except Exception:
-            df = pd.DataFrame(columns=default_columns)
-            df.to_csv(FILE_CSV, index=False)
-            return df
-
-    # Pulizia nomi colonne
-    df.columns = [str(col).strip() for col in df.columns]
-
-    # Mappatura semantica delle colonne anagrafiche
-    col_map = {}
-    for col in df.columns:
-        c_lower = col.lower()
-        if c_lower in ['azienda', 'ragione sociale', 'ragionesociale', 'nome', 'company']:
-            col_map[col] = 'Ragione Sociale'
-        elif c_lower in ['web', 'sito', 'sito web', 'sitoweb', 'url', 'website', 'link', 'dominio']:
-            col_map[col] = 'Sito Web'
-        elif c_lower in ['sede', 'città', 'citta', 'location']:
-            col_map[col] = 'Sede'
-            
-    df = df.rename(columns=col_map)
-
-    # Assicuriamo la presenza delle colonne chiave
-    if 'Ragione Sociale' not in df.columns:
-        df['Ragione Sociale'] = df.iloc[:, 0]
-    if 'Sito Web' not in df.columns:
-        df['Sito Web'] = 'N/D'
-    if 'Sede' not in df.columns:
-        df['Sede'] = 'N/D'
-
-    # Inizializzazione colonne mancanti (workflow, report, note, score e tutte le checkbox)
-    for col in default_columns:
-        if col not in df.columns:
-            df[col] = False if col.startswith('Chk_') else ''
-            
-    # --- FIX DEFINITIVO TYPEERROR ---
-    colonne_testo = ['Ragione Sociale', 'Sito Web', 'Sede', 'Stato Workflow', 'Report Audit Completo', 'Note Audit Digitale']
-    for col in colonne_testo:
-        if col in df.columns:
-            df[col] = df[col].astype('object')
-            
-    return df
-
-def save_data(df):
-    df.to_csv(FILE_CSV, index=False)
-
-df_lead = load_data()
-
-# --- FUNZIONE SCANSIONE SEO REALE ---
-def scansione_seo_reale(url):
-    if not url or pd.isna(url) or str(url).strip() in ['', 'nan', 'N/D']:
-        return "❌ Nessun URL valido specificato per questa azienda.", []
-    
-    url_pulito = str(url).strip()
-    if not url_pulito.startswith(('http://', 'https://')):
-        url_pulito = 'https://' + url_pulito
-        
-    risultati = []
-    criticita = []
-    start_time = time.time()
-    
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',
-    }
-    
-    try:
-        ctx = ssl.create_default_context()
-        ctx.check_hostname = False
-        ctx.verify_mode = ssl.CERT_NONE
-        
-        req = urllib.request.Request(url_pulito, headers=headers)
-        with urllib.request.urlopen(req, timeout=8, context=ctx) as response:
-            load_time = round(time.time() - start_time, 2)
-            status_code = response.getcode()
-            html = response.read().decode('utf-8', errors='ignore')
-            
-            risultati.append(f"🌐 **URL Verificato:** {url_pulito}")
-            risultati.append(f"✅ **Stato Server:** HTTP {status_code}")
-            risultati.append(f"⏱️ **Tempo Risposta Server:** {load_time}s")
-            
-            if load_time > 2.5:
-                criticita.append("⏱️ Tempo di risposta del server elevato")
-            
-            title_match = re.search(r'<title>(.*?)</title>', html, re.IGNORECASE | re.DOTALL)
-            if title_match and title_match.group(1).strip():
-                risultati.append(f"📌 **Tag Title:** {title_match.group(1).strip()}")
-            else:
-                risultati.append("⚠️ **Tag Title:** MANCANTE o vuoto")
-                criticita.append("❌ Assenza o errore nel Tag Title")
-                
-            desc_match = re.search(r'<meta\s+name=["\']description["\']\s+content=["\'](.*?)["\']', html, re.IGNORECASE)
-            if desc_match and desc_match.group(1).strip():
-                risultati.append(f"📝 **Meta Description:** Presente")
-            else:
-                risultati.append("⚠️ **Meta Description:** MANCANTE")
-                criticita.append("❌ Assenza Meta Description")
-                
-            h1_match = re.search(r'<h1[^>]*>(.*?)</h1>', html, re.IGNORECASE | re.DOTALL)
-            if h1_match:
-                clean_h1 = re.sub(r'<[^>]+>', '', h1_match.group(1)).strip()
-                risultati.append(f"🏷️ **Tag H1 Principale:** {clean_h1}")
-            else:
-                risultati.append("⚠️ **Tag H1 Principale:** MANCANTE")
-                criticita.append("❌ Assenza Tag H1 principale")
-                
-    except urllib.error.HTTPError as e:
-        risultati.append(f"⚠️ **Protezione Firewall o Errore HTTP {e.code}**")
-        criticita.append(f"🔒 Errore HTTP {e.code}")
-    except Exception:
-        risultati.append(f"❌ **Impossibile raggiungere il sito** ({url_pulito}).")
-        criticita.append("❌ Sito non raggiungibile o offline")
-        
-    return "\n\n".join(risultati), criticita
-
-# --- INTERFACCIA ---
-st.title("💼 Dashboard Gestionale Lead & Audit V2")
-
-tab_panoramica, tab_scheda = st.tabs(["📊 Panoramica Database", "🏢 Scheda Dettaglio Lead & Audit V2"])
-
-with tab_panoramica:
-    st.subheader("📊 Tabella Generale Lead")
-    st.dataframe(df_lead, use_container_width=True)
-
-with tab_scheda:
-    if df_lead.empty:
-        st.warning("Il database è vuoto.")
-    else:
-        elenco_aziende = df_lead['Ragione Sociale'].dropna().unique().tolist()
-        azienda_selezionata = st.selectbox("🎯 Seleziona Azienda:", elenco_aziende, key="sel_az")
-        
-        idx_row = df_lead[df_lead['Ragione Sociale'] == azienda_selezionata].index[0]
-        lead_info = df_lead.loc[idx_row]
-        
-        sito_url = str(lead_info.get('Sito Web', 'N/D')).strip()
-        sede_info = str(lead_info.get('Sede', 'N/D')).strip()
-        
-        st.markdown(f"### 🏢 Scheda Cliente: **{lead_info['Ragione Sociale']}**")
-        
-        col_info1, col_info2, col_info3 = st.columns(3)
-        col_info1.markdown(f"**Sito Web:** [{sito_url}]({sito_url if sito_url.startswith('http') else 'https://' + sito_url})" if sito_url != 'N/D' else "**Sito Web:** N/D")
-        col_info2.markdown(f"**Sede:** {sede_info}")
-        col_info3.markdown(f"**Stato Attuale:** `{lead_info.get('Stato Workflow', 'Importato')}`")
-        
-        st.markdown("---")
-        
-        # --- DIAGNOSI RAPIDA ---
-        col_btn, col_res = st.columns([1, 2])
-        with col_btn:
-            st.write("### 🔍 Diagnosi Rapida")
-            lancia_scansione = st.button("🚀 Esegui Scansione Tecnico-SEO Reale", type="primary")
-            
-        with col_res:
-            if lancia_scansione:
-                with st.spinner("Scansione del sito in corso..."):
-                    report_scansione, lista_crit = scansione_seo_reale(sito_url)
-                    st.session_state[f'ultimo_report_{azienda_selezionata}'] = report_scansione
-
-            if f'ultimo_report_{azienda_selezionata}' in st.session_state:
-                st.info(st.session_state[f'ultimo_report_{azienda_selezionata}'])
-
-        st.markdown("---")
-        
-        # --- TAB INTERNE ---
-        tab_note, tab_validazione, tab_report, tab_prompt = st.tabs([
-            "✏️ Note & Workflow", "✅ Validazione Criticità", "📄 Report Audit", "📋 Prompt"
-        ])
-        
-        with tab_note:
-            stati_possibili = ["Importato", "In Analisi", "Audit Generato", "Contattato", "In Trattativa", "Vinto", "Perso"]
-            stato_corrente = str(lead_info.get('Stato Workflow', 'Importato'))
-            idx_stato = stati_possibili.index(stato_corrente) if stato_corrente in stati_possibili else 0
-            
-            stato_wf = st.selectbox("Stato Workflow:", stati_possibili, index=idx_stato)
-            
-            note_attuali = str(lead_info.get('Note Audit Digitale', ''))
-            if note_attuali.lower() == 'nan':
-                note_attuali = ''
-            note_sintesi = st.text_area("Note SEO:", value=note_attuali, height=150)
-            
-            if st.button("💾 Salva Note & Stato"):
-                df_lead.loc[idx_row, 'Note Audit Digitale'] = str(note_sintesi)
-                df_lead.loc[idx_row, 'Stato Workflow'] = str(stato_wf)
-                save_data(df_lead)
-                st.success("Dati salvati nel file CSV!")
-
-        with tab_validazione:
-            st.write("#### ⚙️ 1. SEO Tecnica")
-            chk_https = st.checkbox("Mancanza HTTPS / SSL sicuro", value=bool(lead_info.get('Chk_Https', False)))
-            chk_http403 = st.checkbox("Errore HTTP 403 / Blocco Bot", value=bool(lead_info.get('Chk_Http403', False)))
-            chk_title = st.checkbox("Assenza o errore nel Tag Title", value=bool(lead_info.get('Chk_Title', False)))
-            chk_desc = st.checkbox("Assenza Meta Description", value=bool(lead_info.get('Chk_Desc', False)))
-            chk_h1 = st.checkbox("Assenza Tag H1 principale", value=bool(lead_info.get('Chk_H1', False)))
-            chk_sitemap = st.checkbox("Assenza Sitemap.XML", value=bool(lead_info.get('Chk_Sitemap', False)))
-            chk_robots = st.checkbox("Assenza o errata configurazione di Robots.txt", value=bool(lead_info.get('Chk_Robots', False)))
-            chk_lat = st.checkbox("Tempi di risposta del server elevati (Latenza)", value=bool(lead_info.get('Chk_Lat', False)))
-            chk_mobile = st.checkbox("Mobile non corretto / Responsive carente", value=bool(lead_info.get('Chk_Mobile', False)))
-            chk_hreflang = st.checkbox("Hreflang non corretto (per siti multilingua)", value=bool(lead_info.get('Chk_Hreflang', False)))
-            
-            st.write("#### 🎨 2. UX / UI (User Experience & Interface)")
-            chk_nav = st.checkbox("Navigazione non chiara o complessa", value=bool(lead_info.get('Chk_Nav', False)))
-            chk_cta = st.checkbox("Call to Action (CTA) non visibili o non coerenti", value=bool(lead_info.get('Chk_Cta', False)))
-            chk_form = st.checkbox("Form di contatto non brevi / macchinosi", value=bool(lead_info.get('Chk_Form', False)))
-            chk_pop = st.checkbox("Presenza di elementi invasivi (popup aggressivi e simili)", value=bool(lead_info.get('Chk_Pop', False)))
-            chk_brand = st.checkbox("Non coerenza visiva e di brand", value=bool(lead_info.get('Chk_Brand', False)))
-            chk_bread = st.checkbox("Assenza di breadcrumbs (briciole di pane per la navigazione)", value=bool(lead_info.get('Chk_Bread', False)))
-            chk_trust = st.checkbox("[Nuovo suggerito] Mancanza di elementi di fiducia visibili (es. loghi clienti, certificazioni o contatti in evidenza nell'header)", value=bool(lead_info.get('Chk_Trust', False)))
-
-            st.write("#### ✍️ 3. Contenuti e GEO (Local SEO & E-E-A-T)")
-            chk_eeat = st.checkbox("Assenza di contenuti originali e segnali E-E-A-T (Competenza, Autorevolezza, Affidabilità)", value=bool(lead_info.get('Chk_Eeat', False)))
-            chk_faq = st.checkbox("Assenza di sezione FAQ (Domande Frequenti)", value=bool(lead_info.get('Chk_Faq', False)))
-            chk_blog = st.checkbox("Assenza di sezione Blog / News / Aggiornamenti", value=bool(lead_info.get('Chk_Blog', False)))
-            chk_nap = st.checkbox("Non coerenza NAP (Name, Address, Phone) tra sito e dati societari/Google Business Profile", value=bool(lead_info.get('Chk_Nap', False)))
-            chk_social = st.checkbox("[Nuovo suggerito] Assenza di link diretti a Social Network o schede Google Business Profile verificate", value=bool(lead_info.get('Chk_Social', False)))
-
-            st.write("#### ⚖️ 4. Legali e Amministrativi (Compliance & GDPR)")
-            chk_piva = st.checkbox("Assenza Partita IVA / Dati societari in chiaro in Home Page (o nel footer)", value=bool(lead_info.get('Chk_Piva', False)))
-            chk_gdpr = st.checkbox("Assenza GDPR / Privacy Policy adeguata", value=bool(lead_info.get('Chk_Gdpr', False)))
-            chk_cookie = st.checkbox("Assenza Cookie Law / Gestione policy dei cookie", value=bool(lead_info.get('Chk_Cookie', False)))
-            chk_banner = st.checkbox("Assenza Cookie Banner conforme (es. blocco preventivo dei tracker)", value=bool(lead_info.get('Chk_Banner', False)))
-            chk_srl = st.checkbox("Assenza Informativa specifica per SRL / SPA (es. indicazione Registro Imprese, Capitale Sociale, ecc.)", value=bool(lead_info.get('Chk_Srl', False)))
-            chk_pec = st.checkbox("[Nuovo suggerito] Assenza di collegamenti alla PEC / SDI nei contatti o footer (obbligatorio/utile per il B2B italiano)", value=bool(lead_info.get('Chk_Pec', False)))
-
-            if st.button("💾 Salva Validazione e Calcola Score"):
-                df_lead.loc[idx_row, 'Chk_Https'] = bool(chk_https)
-                df_lead.loc[idx_row, 'Chk_Http403'] = bool(chk_http403)
-                df_lead.loc[idx_row, 'Chk_Title'] = bool(chk_title)
-                df_lead.loc[idx_row, 'Chk_Desc'] = bool(chk_desc)
-                df_lead.loc[idx_row, 'Chk_H1'] = bool(chk_h1)
-                df_lead.loc[idx_row, 'Chk_Sitemap'] = bool(chk_sitemap)
-                df_lead.loc[idx_row, 'Chk_Robots'] = bool(chk_robots)
-                df_lead.loc[idx_row, 'Chk_Lat'] = bool(chk_lat)
-                df_lead.loc[idx_row, 'Chk_Mobile'] = bool(chk_mobile)
-                df_lead.loc[idx_row, 'Chk_Hreflang'] = bool(chk_hreflang)
-                df_lead.loc[idx_row, 'Chk_Nav'] = bool(chk_nav)
-                df_lead.loc[idx_row, 'Chk_Cta'] = bool(chk_cta)
-                df_lead.loc[idx_row, 'Chk_Form'] = bool(chk_form)
-                df_lead.loc[idx_row, 'Chk_Pop'] = bool(chk_pop)
-                df_lead.loc[idx_row, 'Chk_Brand'] = bool(chk_brand)
-                df_lead.loc[idx_row, 'Chk_Bread'] = bool(chk_bread)
-                df_lead.loc[idx_row, 'Chk_Trust'] = bool(chk_trust)
-                df_lead.loc[idx_row, 'Chk_Eeat'] = bool(chk_eeat)
-                df_lead.loc[idx_row, 'Chk_Faq'] = bool(chk_faq)
-                df_lead.loc[idx_row, 'Chk_Blog'] = bool(chk_blog)
-                df_lead.loc[idx_row, 'Chk_Nap'] = bool(chk_nap)
-                df_lead.loc[idx_row, 'Chk_Social'] = bool(chk_social)
-                df_lead.loc[idx_row, 'Chk_Piva'] = bool(chk_piva)
-                df_lead.loc[idx_row, 'Chk_Gdpr'] = bool(chk_gdpr)
-                df_lead.loc[idx_row, 'Chk_Cookie'] = bool(chk_cookie)
-                df_lead.loc[idx_row, 'Chk_Banner'] = bool(chk_banner)
-                df_lead.loc[idx_row, 'Chk_Srl'] = bool(chk_srl)
-                df_lead.loc[idx_row, 'Chk_Pec'] = bool(chk_pec)
-                
-                lista_valori_chk = [
-                    chk_https, chk_http403, chk_title, chk_desc, chk_h1, 
-                    chk_sitemap, chk_robots, chk_lat, chk_mobile, chk_hreflang,
-                    chk_nav, chk_cta, chk_form, chk_pop, chk_brand, chk_bread, chk_trust,
-                    chk_eeat, chk_faq, chk_blog, chk_nap, chk_social,
-                    chk_piva, chk_gdpr, chk_cookie, chk_banner, chk_srl, chk_pec
-                ]
-                tot_check = sum(lista_valori_chk)
-                score_calc = round((tot_check / len(lista_valori_chk)) * 100)
-                df_lead.loc[idx_row, 'Score Opportunità (%)'] = int(score_calc)
-                
-                save_data(df_lead)
-                st.success(f"Validazione salvata con successo! Score opportunità calcolato: {score_calc}%")
-
-        with tab_report:
-            st.write("#### 📄 Report e Sintesi Audit")
-            
-            uploaded_file = st.file_uploader("📎 Carica file Audit (formati ammessi: TXT, MD):", type=["txt", "md"])
-            
-            testo_base = str(lead_info.get('Report Audit Completo', ''))
-            if testo_base.lower() == 'nan':
-                testo_base = ''
-            
-            if uploaded_file is not None:
-                string_data = uploaded_file.getvalue().decode("utf-8")
-                st.info("File letto correttamente. Il contenuto è visibile qui sotto pronto per essere salvato.")
-                testo_base = f"{testo_base}\n\n--- NUOVO AUDIT CARICATO ---\n{string_data}" if testo_base.strip() else string_data
-            
-            audit_completo = st.text_area("Testo Report / Sintesi:", value=testo_base, height=300)
-            
-            if st.button("💾 Salva Report Finale"):
-                df_lead.loc[idx_row, 'Report Audit Completo'] = str(audit_completo)
-                save_data(df_lead)
-                st.success("Report e allegati testuali salvati nel database!")
-                
-        with tab_prompt:
-            st.code(f"Agisci come consulente SEO ed esperto di digital marketing per l'azienda {lead_info['Ragione Sociale']} con sito {sito_url}. Analizza le criticità rilevate e prepara una strategia mirata alla lead generation.")
+     if deadline:datetime.date.fromisoformat(deadline)
+     save(row,{'Stato Workflow':status,'Note Audit Digitale':notes,'Prossima Azione':action,'Scadenza':deadline})
+    except ValueError:st.error('Scrivi una data valida nel formato AAAA-MM-GG, oppure lascia vuoto.')
+  st.subheader('Storico dei contatti')
+  contacts=history(row,'Contatti JSON')
+  for event in reversed(contacts):
+   with st.expander(event.get('date','')[:10]+' · '+event.get('channel','')):st.write(event.get('note',''))
+  with st.form('contact_'+selected,clear_on_submit=True):
+   channel=st.selectbox('Tipo di contatto',['Telefonata','Email','Incontro','Altro']);contact=st.text_area('Esito e appunti')
+   if st.form_submit_button('Registra contatto'):
+    if not contact.strip():st.error('Scrivi un esito prima di registrare il contatto.')
+    else:save(row,{'Contatti JSON':json.dumps(contacts+[{'date':now(),'channel':channel,'note':contact.strip()}],ensure_ascii=False)})
+ with tabs[1]:
+  st.info('Controllo preliminare della pagina: HTTP, HTTPS verificato, title, description e H1. Non è un audit SEO completo.')
+  if st.button('Esegui controllo preliminare',type='primary',disabled=not bool(row['Sito Web'])):
+   with st.spinner('Controllo della pagina in corso…'):st.session_state['scan_'+selected]=scan(row['Sito Web'])
+  result=st.session_state.get('scan_'+selected)
+  if result:
+   render_scan(result)
+   if st.button('Conserva questa scansione nello storico'):
+    scans=history(row,'Scansioni JSON')
+    if any(x.get('date')==result.get('date') for x in scans):st.info('Questa scansione è già nello storico.')
+    else:save(row,{'Scansioni JSON':json.dumps(scans+[result],ensure_ascii=False)})
+   if result.get('checks') and st.button('Riporta i risultati automatici nella checklist'):
+    new={**values,**result['checks']};count,checked,applicable,index=metrics(new);save(row,{'Checklist JSON':json.dumps(new,ensure_ascii=False),'Score Opportunità (%)':str(index) if index is not None else ''})
+  scans=history(row,'Scansioni JSON')
+  st.subheader('Scansioni conservate')
+  if not scans:st.caption('Nessuna scansione salvata.')
+  for item in reversed(scans):
+   with st.expander(item.get('date','')+' · HTTP '+str(item.get('status','—'))):render_scan(item)
+ with tabs[2]:
+  a,b,c=st.columns(3);a.metric('Criticità accertate',issues);b.metric('Controlli verificati',f'{done}/{total}');c.metric('Indice criticità',f'{score}%' if score is not None else '—')
+  st.progress(done/max(total,1));st.caption('Indice = criticità / controlli verificati applicabili. Non indica probabilità di vendita. L’assenza di blog, FAQ o breadcrumbs va valutata rispetto alle esigenze del sito.')
+  with st.form('checklist_'+selected):
+   new={}
+   for group,checks in CHECKS.items():
+    with st.expander(group,expanded=group=='SEO tecnica'):
+     if group.startswith('Verifiche informative'):st.caption('Registrazione di verifiche da approfondire: non certifica conformità normativa.')
+     for key,label in checks:new[key]=st.selectbox(label,OPTIONS,index=OPTIONS.index(values[key]),key=selected+'_'+key)
+   if st.form_submit_button('Salva checklist e aggiorna indice',type='primary'):
+    count,checked,applicable,index=metrics(new);changes={'Checklist JSON':json.dumps(new,ensure_ascii=False),'Score Opportunità (%)':str(index) if index is not None else ''};changes.update({key:str(value=='Criticità') for key,value in new.items()});save(row,changes)
+ with tabs[3]:
+  st.caption('Carica testi o documenti: il contenuto estratto si aggiunge al report soltanto dopo il salvataggio.')
+  uploaded=st.file_uploader('Allega un audit',type=['txt','md','pdf','docx'],key='audit_'+selected)
+  addition=''
+  if uploaded:
+   try:
+    if uploaded.size>10*1024*1024:raise ValueError('Limite 10 MB per documento.')
+    if uploaded.name.lower().endswith('.pdf'):
+     from pypdf import PdfReader
+     addition='\n'.join(p.extract_text() or '' for p in PdfReader(uploaded).pages)
+    elif uploaded.name.lower().endswith('.docx'):
+     from docx import Document
+     addition='\n'.join(p.text for p in Document(uploaded).paragraphs)
+    else:addition=uploaded.getvalue().decode('utf-8-sig')
+    st.text_area('Anteprima del testo estratto',addition[:100000],height=150,disabled=True)
+    if not addition.strip():st.warning('Nessun testo estratto. I PDF scansionati richiedono OCR e non sono supportati.')
+   except Exception:st.error('Documento non leggibile o oltre 10 MB. Il report salvato resta invariato.')
+  with st.form('report_'+selected):
+   report=st.text_area('Report audit',row['Report Audit Completo'],height=300);append=st.checkbox('Aggiungi al report il testo del documento caricato',value=False)
+   if st.form_submit_button('Salva report',type='primary'):
+    if append and not addition.strip():st.error('Carica prima un documento leggibile.')
+    else:save(row,{'Report Audit Completo':report+('\n\n--- '+uploaded.name+' ---\n'+addition if append else '')})
+  st.download_button('Scarica la scheda e l’audit',report_markdown(row),file_name='scheda-lead-'+selected[:8]+'.md',mime='text/markdown')
+  prompt=f'Avvia il Metodo Gilberto Del Pizzo per {row["Ragione Sociale"]}, sito {row["Sito Web"]}. Usa i dati allegati distinguendo verifiche accertate, ipotesi e informazioni mancanti. Non dedurre qualità, conformità o probabilità di vendita dalle sole caselle. Valido io le fasi.'
+  with st.expander('Prompt per approfondire la strategia'):st.code(prompt,language=None)
+ with tabs[4]:
+  with st.form('company_'+selected):
+   name=st.text_input('Ragione sociale',row['Ragione Sociale']);web=st.text_input('Sito web',row['Sito Web']);city=st.text_input('Sede',row['Sede']);email=st.text_input('Email',row.get('MAIL',''));phone=st.text_input('Telefono',row.get('Telefono',''))
+   if st.form_submit_button('Salva anagrafica'):
+    if not name.strip():st.error('Il nome azienda è obbligatorio.')
+    else:save(row,{'Ragione Sociale':name.strip(),'Sito Web':web.strip(),'Sede':city.strip(),'MAIL':email.strip(),'Telefono':phone.strip()})
+elif page=='Importa ed esporta':
+ st.subheader('Conserva una copia del tuo lavoro')
+ st.info('Archivio completo: conserva ID, versioni, note, checklist e storico. Scaricalo prima di aggiornare o riavviare l’app Cloud.')
+ st.download_button('Scarica archivio completo · CSV',encode_csv(rows),file_name='gestionale-lead-backup.csv',mime='text/csv',type='primary')
+ st.download_button('Scarica copia per foglio di calcolo',encode_csv(rows,spreadsheet_safe=True),file_name='gestionale-lead-tabella.csv',mime='text/csv')
+ st.subheader('Importa nuove aziende')
+ st.caption('Aggiunge solo le aziende non già presenti con lo stesso nome e sito. Non sovrascrive note o verifiche esistenti. Non è un ripristino completo di backup.')
+ upload=st.file_uploader('CSV con AZIENDA o Ragione Sociale',type=['csv'])
+ if upload:
+  try:
+   if upload.size>10*1024*1024:raise DataError('Il CSV supera 10 MB.')
+   incoming=parse_csv(upload.getvalue());st.write(f'{len(incoming)} righe lette correttamente.');st.dataframe(pd.DataFrame(incoming)[['Ragione Sociale','Sito Web','Sede']],hide_index=True)
+   if st.button('Conferma importazione'):
+    added=store.import_new(incoming);st.session_state['flash']=f'Inserite {added} nuove aziende; quelle già presenti sono rimaste invariate.';st.rerun()
+  except DataError as exc:st.error(str(exc))
+else:
+ st.markdown((ROOT/'GUIDA_USO.md').read_text(encoding='utf-8'))
+ st.download_button('Scarica la guida d’uso',(ROOT/'GUIDA_USO.md').read_bytes(),file_name='Guida_Gestionale_Lead_v3.md',mime='text/markdown')
