@@ -50,3 +50,12 @@ Nella scheda lead, apri **Audit preliminare**. La sezione **Analisi completa con
 3. Scarica il report e caricalo in **Report e allegati** della stessa azienda; conferma il salvataggio.
 
 Il collegamento apre il Plugin, ma non invia automaticamente il testo e non recupera automaticamente il report. Il gestionale conserva il testo estratto dal documento caricato; conserva anche il documento originale sul tuo PC. Se manca il sito, inseriscilo prima in Anagrafica.
+
+
+## Checklist con pulsanti e contatori immediati
+Accanto a ogni controllo scegli **Verificato** (verde, nessuna criticità), **Non presente** (rosso, criticità) oppure **Non applicabile** (grigio, escluso dal calcolo). Le voci senza scelta restano non verificate. Contatori e indice si aggiornano durante la compilazione; premi **Salva checklist e aggiorna indice** per conservare le scelte.
+
+## Aprire la chat con il sito già compilato
+In **Scheda lead → Audit preliminare**, premi **Apri chat con sito e richiesta**. ChatGPT riceve nel testo preparato il sito, il nome dell’azienda, la sede e la modalità Audit completo. Seleziona con **@** il Plugin **Analisi Sito Web V2 – Audit Strategico** prima di inviare. Il Plugin non è selezionato automaticamente. Se il testo non viene mantenuto, copialo dal riquadro nel gestionale. Il pulsante **Apri Plugin in ChatGPT** resta disponibile come alternativa: dalla pagina del Plugin premi **Prova in chat**.
+
+Il gestionale rimane ospitato su Streamlit; la Cabina di regia contiene il collegamento per aprirlo. Dopo l’audit, carica e salva il report nella scheda del lead. Esporta periodicamente l’archivio completo: la persistenza dei file locali su Streamlit Cloud non è garantita.
