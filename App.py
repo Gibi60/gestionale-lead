@@ -110,8 +110,8 @@ elif page=='Scheda lead':
     'Settore, obiettivi, pubblico, concorrenti ed e-commerce: non forniti; procedi distinguendo osservazioni e inferenze.\n'
     'Concludi con un report scaricabile da riportare nel gestionale Lead, nella sezione Report e allegati.'
    )
-   st.link_button('Avvia analisi completa del sito ↗','https://chatgpt.com/plugins/plugin_7c6270f298e8819197fe4de1bf1ecd6f?directoryTab=personal',type='primary')
-   st.caption('1. Copia la richiesta qui sotto con l’icona in alto a destra del riquadro. 2. Apri il Plugin, avvia una chat e incolla la richiesta. 3. Carica il report ottenuto in Report e allegati e salvalo nella scheda. Il testo e il report non vengono trasferiti automaticamente.')
+   st.link_button('Apri Plugin in ChatGPT ↗','https://chatgpt.com/plugins/plugin_7c6270f298e8819197fe4de1bf1ecd6f?directoryTab=personal',type='primary')
+   st.caption('1. Copia la richiesta qui sotto con l’icona in alto a destra del riquadro. 2. Apri il Plugin e premi «Prova in chat»; in alternativa, in una nuova chat seleziona con @ Analisi Sito Web V2 – Audit Strategico. Incolla la richiesta e inviala. 3. Carica il report ottenuto in Report e allegati e salvalo nella scheda. Il testo e il report non vengono trasferiti automaticamente.')
    with st.expander('Richiesta pronta per questa azienda',expanded=True):
     st.code(audit_request,language=None)
     st.download_button('Scarica richiesta di audit',audit_request,file_name='Richiesta_audit_'+selected[:8]+'.txt',mime='text/plain',key='audit_request_'+selected)
