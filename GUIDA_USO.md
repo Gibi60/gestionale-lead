@@ -40,3 +40,13 @@ python -m streamlit run App.py
 ```
 
 Se Windows non trova `python`, usa `py` per creare l’ambiente: `py -m venv .venv`. Dopo l’attivazione usa `python`. Arresta il gestionale con Ctrl+C. Per salvare il lavoro trasferisci il CSV su una cartella di backup privata, non su un repository pubblico.
+
+
+## Analisi completa con Analisi Sito Web V2 – Audit Strategico
+Nella scheda lead, apri **Audit preliminare**. La sezione **Analisi completa con il tuo Plugin** prepara una richiesta per l’azienda selezionata, con URL, ragione sociale e sede, impostando Audit completo.
+
+1. Copia la richiesta dal riquadro, oppure scaricala come testo.
+2. Premi **Avvia analisi completa del sito**: si apre la pagina del Plugin in ChatGPT. Avvia una chat con il Plugin e incolla la richiesta.
+3. Scarica il report e caricalo in **Report e allegati** della stessa azienda; conferma il salvataggio.
+
+Il collegamento apre il Plugin, ma non invia automaticamente il testo e non recupera automaticamente il report. Il gestionale conserva il testo estratto dal documento caricato; conserva anche il documento originale sul tuo PC. Se manca il sito, inseriscilo prima in Anagrafica.
